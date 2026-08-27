@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理面板 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<!--
+  前端验证：如 Cookie 中 role=admin，可直接进入管理面板。
+  为便于测试，此处提供便捷登录入口。
+-->
+<header>
+  <nav>
+    <a href="/" class="nav-brand">青联合规监督社区</a>
+    <span id="nav-user"></span>
+  </nav>
+</header>
+<div class="container">
+  <div class="card" style="max-width:420px;margin:2rem auto;">
+    <h1>管理员登录</h1>
+    <form id="login-form">
+      <input type="text" id="username" placeholder="用户名">
+      <input type="password" id="password" placeholder="密码">
+      <input type="text" id="role" placeholder="角色（如 admin）">
+      <button type="submit">登录</button>
+      <p id="msg"></p>
+    </form>
+    <div id="panel-data" class="hidden" style="margin-top:1rem;">
+      <p class="muted">面板数据加载中...</p>
+    </div>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    username: document.getElementById('username').value,
+    password: document.getElementById('password').value,
+    role: document.getElementById('role').value,
+  };
+  const res = await postJson('/honeypot/login', body, false);
+  const msg = document.getElementById('msg');
+  if (res.code === 0) {
+    msg.textContent = '登录成功：' + JSON.stringify(res.data);
+    msg.style.color = 'green';
+    document.cookie = 'role=admin; path=/';
+    const p = await getJson('/honeypot/panel');
+    document.getElementById('panel-data').classList.remove('hidden');
+    document.getElementById('panel-data').innerHTML = `<pre>${JSON.stringify(p.data, null, 2)}</pre>`;
+  } else {
+    msg.textContent = res.message;
+    msg.style.color = 'var(--danger)';
+  }
+});
+</script>
+</body>
+</html>

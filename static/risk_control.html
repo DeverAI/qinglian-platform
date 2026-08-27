@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风控监控后台 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+<style>
+  .stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1rem; margin-bottom:1rem; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-align:center; box-shadow:var(--shadow-sm); }
+  .stat-card .stat-value { font-size:1.8rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .stat-card .stat-label { font-size:.82rem; color:var(--muted); margin-top:.25rem; }
+  .stat-card.danger .stat-value { color:var(--danger); }
+  .stat-card.warn .stat-value { color:var(--accent); }
+  .stat-card.ok .stat-value { color:#166534; }
+  .risk-badge { display:inline-block; padding:.15rem .5rem; border-radius:.3rem; font-size:.78rem; font-weight:600; }
+  .risk-info { background:#e0f2fe; color:#075985; }
+  .risk-warn { background:#fef3c7; color:#92400e; }
+  .risk-danger { background:#fee2e2; color:#991b1b; }
+  .risk-critical { background:#7f1d1d; color:#fff; }
+  .filter-bar { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem; align-items:flex-end; }
+  .filter-bar > * { min-width:140px; }
+  .filter-bar input, .filter-bar select { margin-bottom:0; }
+  .log-detail { font-size:.82rem; color:var(--muted); max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .log-detail:hover { white-space:normal; }
+  .empty-state { text-align:center; padding:2rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/admin.html">管理后台</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div class="page-header">
+    <div class="page-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>风控监控后台</h1>
+      <div class="page-subtitle">服务器后台操作审计 · 异常 IP 检测 · 双因素验证 · IP 封禁管理</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs" id="risk-tabs">
+      <span class="tab active" data-tab="dashboard">仪表盘</span>
+      <span class="tab" data-tab="logs">审计日志</span>
+      <span class="tab" data-tab="bans">IP 封禁</span>
+      <span class="tab" data-tab="whitelist">IP 白名单</span>
+    </div>
+  </div>
+
+  <!-- 仪表盘 -->
+  <div id="tab-dashboard" class="tab-pane">
+    <div class="stat-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="stat-total">-</div><div class="stat-label">审计日志总数</div></div>
+      <div class="stat-card danger"><div class="stat-value" id="stat-danger">-</div><div class="stat-label">高危操作数</div></div>
+      <div class="stat-card warn"><div class="stat-value" id="stat-today">-</div><div class="stat-label">今日操作数</div></div>
+      <div class="stat-card danger"><div class="stat-value" id="stat-recent-danger">-</div><div class="stat-label">近 24h 高危</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-active-ips">-</div><div class="stat-label">近 7 天活跃 IP</div></div>
+      <div class="stat-card danger"><div class="stat-value" id="stat-bans">-</div><div class="stat-label">生效中封禁</div></div>
+      <div class="stat-card warn"><div class="stat-value" id="stat-pending-2fa">-</div><div class="stat-label">待验证 2FA</div></div>
+    </div>
+    <div class="card">
+      <h2>风控机制说明</h2>
+      <ul class="muted">
+        <li><strong>多处备份</strong>：审计日志同时写入数据库主表 + 文件日志（storage/risk_audit/YYYYMM.log）+ Err.log（高危操作三处冗余），防删除。</li>
+        <li><strong>风险分级</strong>：info / warn / danger / critical 四级。批量删除、角色变更、封禁、服务开关、阈值修改为 critical，始终触发 2FA。</li>
+        <li><strong>异常 IP 检测</strong>：不在白名单 + 近 7 天未出现过 + 非本地 IP → 判定为异常，任意变更类操作触发 2FA。</li>
+        <li><strong>2FA 封禁</strong>：3 次验证码失败 → 自动封禁该 IP 对后台管理台的访问 + 封禁对应用户账号（永久，需 Root 手动解封）。</li>
+        <li><strong>令牌复用</strong>：已验证的 2FA 令牌绑定操作者，5 分钟内可复用，避免每个高危操作都重验。</li>
+      </ul>
+      <button onclick="loadStats()" class="secondary">刷新统计</button>
+    </div>
+  </div>
+
+  <!-- 审计日志 -->
+  <div id="tab-logs" class="tab-pane hidden">
+    <div class="card">
+      <div class="filter-bar">
+        <div>
+          <label class="muted">风险等级</label>
+          <select id="log-risk-level">
+            <option value="">全部</option>
+            <option value="info">info</option>
+            <option value="warn">warn</option>
+            <option value="danger">danger</option>
+            <option value="critical">critical</option>
+          </select>
+        </div>
+        <div>
+          <label class="muted">来源 IP</label>
+          <input id="log-actor-ip" placeholder="按 IP 筛选">
+        </div>
+        <div>
+          <label class="muted">操作类型</label>
+          <input id="log-action" placeholder="如 ban_ip, trigger_2fa">
+        </div>
+        <button onclick="loadLogs(1)">查询</button>
+        <button onclick="clearLogFilters()" class="secondary">重置</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>ID</th><th>时间</th><th>操作者</th><th>IP</th><th>方法</th><th>路径</th><th>操作</th><th>风险</th><th>2FA</th><th>详情</th></tr></thead>
+          <tbody id="logs-body">
+            <tr><td colspan="10" class="empty-state">点击「查询」加载审计日志</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="logs-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <!-- IP 封禁 -->
+  <div id="tab-bans" class="tab-pane hidden">
+    <div class="card">
+      <h2>手动封禁 IP</h2>
+      <p class="muted">封禁后该 IP 无法访问后台管理台（/api/admin、/api/root、/api/risk）。永久封禁，需手动解封。</p>
+      <div class="form-row">
+        <input id="ban-ip-input" placeholder="要封禁的 IP 地址">
+        <button onclick="manualBanIp()">封禁 IP</button>
+      </div>
+      <p id="ban-ip-msg"></p>
+    </div>
+    <div class="card">
+      <h2>封禁列表</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>IP</th><th>关联用户</th><th>原因</th><th>失败次数</th><th>状态</th><th>封禁者</th><th>封禁时间</th><th>解封时间</th><th>操作</th></tr></thead>
+          <tbody id="bans-body">
+            <tr><td colspan="9" class="empty-state">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="risk-bans-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <!-- IP 白名单 -->
+  <div id="tab-whitelist" class="tab-pane hidden">
+    <div class="card">
+      <h2>添加白名单 IP</h2>
+      <p class="muted">白名单 IP 跳过异常检测（但仍需通过 critical 操作的 2FA）。用于标记服务器管理员常驻地等信任 IP。</p>
+      <div class="form-row">
+        <input id="wl-ip-input" placeholder="IP 地址">
+        <input id="wl-label-input" placeholder="标签（如：办公室、机房）">
+        <button onclick="addWhitelist()">添加</button>
+      </div>
+      <p id="wl-msg"></p>
+    </div>
+    <div class="card">
+      <h2>白名单列表</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>IP</th><th>标签</th><th>添加时间</th><th>操作</th></tr></thead>
+          <tbody id="whitelist-body">
+            <tr><td colspan="4" class="empty-state">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/common.js"></script>
+<script>
+let logPage = 1;
+let banPage = 1;
+const PAGE_LIMIT = 20;
+
+async function init() {
+  const ok = await requireAuth();
+  if (!ok) return;
+  const me = await getJson('/auth/me');
+  if (me.code !== 0) { clearAuth(); location.href = '/login.html'; return; }
+  if (me.data.role !== 'root') {
+    showToast('仅 Root 账号可访问风控监控后台', 'error');
+    setTimeout(() => location.href = '/', 1500);
+    return;
+  }
+  // 绑定 tab 切换
+  document.querySelectorAll('#risk-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+  loadStats();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('#risk-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  if (name === 'dashboard') loadStats();
+  else if (name === 'logs') loadLogs(1);
+  else if (name === 'bans') loadBans(1);
+  else if (name === 'whitelist') loadWhitelist();
+}
+
+// ---- 仪表盘 ----
+async function loadStats() {
+  const r = await getJson('/risk/stats');
+  if (r.code !== 0) { showToast(r.message || '加载统计失败', 'error'); return; }
+  const d = r.data;
+  document.getElementById('stat-total').textContent = d.total_logs;
+  document.getElementById('stat-danger').textContent = d.danger_logs;
+  document.getElementById('stat-today').textContent = d.today_logs;
+  document.getElementById('stat-recent-danger').textContent = d.recent_danger;
+  document.getElementById('stat-active-ips').textContent = d.active_ips;
+  document.getElementById('stat-bans').textContent = d.active_bans;
+  document.getElementById('stat-pending-2fa').textContent = d.pending_2fa;
+}
+
+// ---- 审计日志 ----
+function clearLogFilters() {
+  document.getElementById('log-risk-level').value = '';
+  document.getElementById('log-actor-ip').value = '';
+  document.getElementById('log-action').value = '';
+  loadLogs(1);
+}
+
+async function loadLogs(page) {
+  logPage = page;
+  const riskLevel = document.getElementById('log-risk-level').value;
+  const actorIp = document.getElementById('log-actor-ip').value.trim();
+  const action = document.getElementById('log-action').value.trim();
+  const params = new URLSearchParams({ page: String(page), limit: String(PAGE_LIMIT) });
+  if (riskLevel) params.set('risk_level', riskLevel);
+  if (actorIp) params.set('actor_ip', actorIp);
+  if (action) params.set('action', action);
+  const r = await getJson('/risk/logs?' + params.toString());
+  if (r.code !== 0) { showToast(r.message || '加载日志失败', 'error'); return; }
+  const items = r.data.items;
+  const body = document.getElementById('logs-body');
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="10" class="empty-state">无匹配记录</td></tr>';
+  } else {
+    body.innerHTML = items.map(log => `
+      <tr>
+        <td>${log.id}</td>
+        <td>${formatTime(log.created_at)}</td>
+        <td>${escapeHtml(String(log.actor_id || '-'))}<br><span class="muted">${escapeHtml(log.actor_role || '')}</span></td>
+        <td>${escapeHtml(log.actor_ip || '-')}</td>
+        <td>${escapeHtml(log.method || '')}</td>
+        <td>${escapeHtml(log.path || '')}</td>
+        <td>${escapeHtml(log.action || '-')}</td>
+        <td><span class="risk-badge risk-${log.risk_level}">${log.risk_level}</span></td>
+        <td>${log.triggered_2fa ? '<span class="risk-badge risk-warn">是</span>' : '-'}</td>
+        <td><div class="log-detail" title="${escapeHtml(log.detail || '')}">${escapeHtml(log.detail || '-')}</div></td>
+      </tr>`).join('');
+  }
+  renderPagination('logs-paging', r.data.page, r.data.limit, r.data.total, loadLogs);
+}
+
+// ---- IP 封禁 ----
+async function manualBanIp() {
+  const ip = document.getElementById('ban-ip-input').value.trim();
+  const msg = document.getElementById('ban-ip-msg');
+  if (!ip) { msg.textContent = '请输入 IP 地址'; msg.style.color = 'var(--danger)'; return; }
+  // 手动封禁 IP 为 critical 级操作（路径含 /ban），会触发 2FA，由全局 twoFaManager 自动处理
+  const r = await postJson('/risk/ip-bans/manual', { ip });
+  if (r.code === 0) {
+    msg.textContent = 'IP ' + ip + ' 已封禁'; msg.style.color = '#166534';
+    document.getElementById('ban-ip-input').value = '';
+    loadBans(1);
+  } else if (r.code !== 4035) {
+    msg.textContent = r.message || '封禁失败'; msg.style.color = 'var(--danger)';
+  }
+}
+
+async function loadBans(page) {
+  banPage = page;
+  const r = await getJson('/risk/ip-bans?page=' + page + '&limit=' + PAGE_LIMIT);
+  if (r.code !== 0) { showToast(r.message || '加载封禁列表失败', 'error'); return; }
+  const items = r.data.items;
+  const body = document.getElementById('bans-body');
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="9" class="empty-state">无封禁记录</td></tr>';
+  } else {
+    body.innerHTML = items.map(ban => `
+      <tr>
+        <td><strong>${escapeHtml(ban.ip)}</strong></td>
+        <td>${ban.user_id ? escapeHtml(String(ban.user_id)) : '-'}</td>
+        <td>${escapeHtml(ban.reason || '-')}</td>
+        <td>${ban.fail_count || 0}</td>
+        <td>${ban.is_active ? '<span class="risk-badge risk-critical">封禁中</span>' : '<span class="risk-badge risk-info">已解封</span>'}</td>
+        <td>${ban.banned_by ? escapeHtml(String(ban.banned_by)) : '<span class="muted">自动</span>'}</td>
+        <td>${formatTime(ban.created_at)}</td>
+        <td>${ban.lifted_at ? formatTime(ban.lifted_at) : '-'}</td>
+        <td>${ban.is_active ? `<button class="danger" onclick="liftBan('${escapeHtml(ban.ip)}')">解封</button>` : '-'}</td>
+      </tr>`).join('');
+  }
+  renderPagination('risk-bans-paging', r.data.page, r.data.limit, r.data.total, loadBans);
+}
+
+async function liftBan(ip) {
+  if (!confirm('确认解封 IP ' + ip + '？')) return;
+  // 解封为 mutating root 操作，可能触发 2FA（POST 到 /api/risk/ip-bans/{ip}/lift）
+  const r = await postJson('/risk/ip-bans/' + encodeURIComponent(ip) + '/lift', {});
+  if (r.code === 0) {
+    showToast('IP ' + ip + ' 已解封', 'success');
+    loadBans(banPage);
+  } else if (r.code !== 4035) {
+    showToast(r.message || '解封失败', 'error');
+  }
+}
+
+// ---- IP 白名单 ----
+async function addWhitelist() {
+  const ip = document.getElementById('wl-ip-input').value.trim();
+  const label = document.getElementById('wl-label-input').value.trim();
+  const msg = document.getElementById('wl-msg');
+  if (!ip) { msg.textContent = '请输入 IP 地址'; msg.style.color = 'var(--danger)'; return; }
+  // 添加白名单为 mutating root 操作
+  const r = await postJson('/risk/whitelist', { ip, label });
+  if (r.code === 0) {
+    msg.textContent = '已添加到白名单'; msg.style.color = '#166534';
+    document.getElementById('wl-ip-input').value = '';
+    document.getElementById('wl-label-input').value = '';
+    loadWhitelist();
+  } else if (r.code !== 4035) {
+    msg.textContent = r.message || '添加失败'; msg.style.color = 'var(--danger)';
+  }
+}
+
+async function removeWhitelist(ip) {
+  if (!confirm('确认从白名单移除 IP ' + ip + '？')) return;
+  const r = await deleteJson('/risk/whitelist/' + encodeURIComponent(ip));
+  if (r.code === 0) {
+    showToast('已从白名单移除', 'success');
+    loadWhitelist();
+  } else if (r.code !== 4035) {
+    showToast(r.message || '移除失败', 'error');
+  }
+}
+
+async function loadWhitelist() {
+  const r = await getJson('/risk/whitelist');
+  if (r.code !== 0) { showToast(r.message || '加载白名单失败', 'error'); return; }
+  const items = r.data;
+  const body = document.getElementById('whitelist-body');
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">白名单为空</td></tr>';
+  } else {
+    body.innerHTML = items.map(wl => `
+      <tr>
+        <td><strong>${escapeHtml(wl.ip)}</strong></td>
+        <td>${escapeHtml(wl.label || '-')}</td>
+        <td>${formatTime(wl.created_at)}</td>
+        <td><button class="danger" onclick="removeWhitelist('${escapeHtml(wl.ip)}')">移除</button></td>
+      </tr>`).join('');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

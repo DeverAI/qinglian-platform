@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识库 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/emails.html" data-module="emails">邮件代发</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div class="page-header">
+    <div class="page-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <div>
+      <h1>知识库</h1>
+      <div class="page-subtitle">法律法规 · 典型案例 · 维权指南</div>
+    </div>
+  </div>
+  <div class="card" id="daily-law-card">
+    <h2>每日一法</h2>
+    <div id="daily-law">加载中...</div>
+  </div>
+  <div class="card">
+    <h2>知识库检索</h2>
+    <div class="form-row">
+      <input id="search-q" placeholder="搜索标题或正文">
+      <button id="search-btn" class="btn btn-primary">搜索</button>
+    </div>
+    <div class="form-row">
+      <input id="keyword-q" placeholder="输入关键词（如：数据共享）查询法律条款">
+      <button id="keyword-btn" class="btn btn-secondary">关键词索引</button>
+    </div>
+    <div class="tabs">
+      <span class="tab active" data-cat="">全部</span>
+      <span class="tab" data-cat="law">法律法规</span>
+      <span class="tab" data-cat="case">典型案例</span>
+      <span class="tab" data-cat="guide">维权指南</span>
+      <span class="tab" data-cat="qoder">Qoder档案</span>
+    </div>
+    <div id="knowledge-list" class="list-stack">加载中...</div>
+    <div id="knowledge-paging" class="pagination"></div>
+  </div>
+  <div class="card hidden" id="detail-card">
+    <div class="btn-group">
+      <button id="back-list" class="btn btn-secondary">返回列表</button>
+    </div>
+    <h2 id="detail-title"></h2>
+    <div class="muted" id="detail-meta"></div>
+    <div id="detail-source"></div>
+    <div id="detail-keywords"></div>
+    <div class="content-block" id="detail-content"></div>
+    <div class="btn-group">
+      <button id="share-btn" class="btn btn-primary">转发本条法律知识（+1 积分）</button>
+    </div>
+    <p id="share-msg" class="muted"></p>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+let currentCat = '';
+let currentSearch = '';
+let currentEntryId = null;
+
+async function loadDailyLaw() {
+  const res = await getJson('/knowledge/daily/today');
+  const el = document.getElementById('daily-law');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  const k = res.data;
+  el.innerHTML = `<h3>${escapeHtml(k.title)}</h3>` +
+    (k.source_url ? `<p><a href="${escapeHtml(safeExternalUrl(k.source_url))}" target="_blank" rel="noopener">官方来源链接</a></p>` : '') +
+    `<div class="content-block">${renderMarkdown(k.content)}</div>`;
+}
+
+async function loadKnowledge(page = 1) {
+  let url = '/knowledge?page=' + page + '&limit=20' + (currentCat ? '&category=' + currentCat : '');
+  if (currentSearch) url += '&q=' + encodeURIComponent(currentSearch);
+  const res = await getJson(url);
+  const el = document.getElementById('knowledge-list');
+  if (res.code !== 0) { el.innerHTML = '<div class="muted">' + escapeHtml(res.message) + '</div>'; return; }
+  const items = res.data.items || [];
+  el.innerHTML = items.length ? items.map(k =>
+    `<div class="list-item">
+      <div class="item-body">
+        <a href="/knowledge.html?id=${k.id}" class="item-title">${escapeHtml(k.title)}</a>
+        <div class="item-meta">${escapeHtml(k.category)}${k.is_official ? ' · 官方' : ''} · ${formatTime(k.created_at)}</div>
+        <div class="muted">${escapeHtml(k.summary)}...</div>
+        ${k.source_url ? `<a href="${escapeHtml(safeExternalUrl(k.source_url))}" target="_blank" rel="noopener">官方来源</a>` : ''}
+      </div>
+    </div>`
+  ).join('') : '<div class="muted">暂无内容</div>';
+  renderPagination('knowledge-paging', res.data.page, res.data.limit, res.data.total, loadKnowledge);
+}
+
+async function showDetail(id) {
+  const res = await getJson('/knowledge/' + id);
+  if (res.code !== 0) { showToast(res.message, 'error'); return; }
+  const k = res.data;
+  currentEntryId = k.id;
+  document.getElementById('knowledge-list').parentElement.classList.add('hidden');
+  document.getElementById('daily-law-card').classList.add('hidden');
+  document.getElementById('detail-card').classList.remove('hidden');
+  document.getElementById('detail-title').textContent = k.title;
+  document.getElementById('detail-meta').textContent = k.category + (k.is_official ? ' · 官方来源' : '') + ' · ' + formatTime(k.created_at);
+  document.getElementById('detail-source').innerHTML = k.source_url
+    ? `<p><a href="${escapeHtml(safeExternalUrl(k.source_url))}" target="_blank" rel="noopener">官方来源链接</a></p>`
+    : '';
+  document.getElementById('detail-keywords').innerHTML = k.keywords && k.keywords.length
+    ? '<p><strong>关键词索引：</strong>' + k.keywords.map(kw => `<span class="tag" onclick="searchKeyword('${escapeHtml(kw.keyword)}')">${escapeHtml(kw.keyword)}</span>`).join('') + '</p>'
+    : '';
+  document.getElementById('detail-content').innerHTML = renderMarkdown(k.content);
+  document.getElementById('share-msg').textContent = '';
+}
+
+async function searchKeyword(keyword) {
+  currentSearch = '';
+  document.getElementById('search-q').value = '';
+  document.getElementById('detail-card').classList.add('hidden');
+  document.getElementById('daily-law-card').classList.remove('hidden');
+  document.getElementById('knowledge-list').parentElement.classList.remove('hidden');
+  const res = await getJson('/knowledge/keywords/' + encodeURIComponent(keyword));
+  const el = document.getElementById('knowledge-list');
+  if (res.code !== 0) { el.innerHTML = '<div class="muted">' + escapeHtml(res.message) + '</div>'; return; }
+  const items = res.data.items || [];
+  el.innerHTML = `<h3>关键词"${escapeHtml(keyword)}"相关法律条款</h3>` +
+    (items.length ? items.map(i => `<div class="list-item">
+      <div class="item-body">
+        <a href="/knowledge.html?id=${i.id}" class="item-title">${escapeHtml(i.title)}</a>
+        <div class="item-meta">${escapeHtml(i.clause)}</div>
+        ${i.source_url ? `<a href="${escapeHtml(safeExternalUrl(i.source_url))}" target="_blank" rel="noopener">官方来源</a>` : ''}
+      </div>
+    </div>`).join('') : '<div class="muted">暂无结果</div>');
+  document.getElementById('knowledge-paging').innerHTML = '';
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentCat = t.dataset.cat;
+    loadKnowledge();
+  });
+});
+
+document.getElementById('search-btn').addEventListener('click', () => {
+  currentSearch = document.getElementById('search-q').value.trim();
+  loadKnowledge();
+});
+
+document.getElementById('keyword-btn').addEventListener('click', () => {
+  const kw = document.getElementById('keyword-q').value.trim();
+  if (kw) searchKeyword(kw);
+});
+
+document.getElementById('back-list')?.addEventListener('click', () => {
+  history.pushState(null, '', '/knowledge.html');
+  document.getElementById('detail-card').classList.add('hidden');
+  document.getElementById('daily-law-card').classList.remove('hidden');
+  document.getElementById('knowledge-list').parentElement.classList.remove('hidden');
+});
+
+document.getElementById('share-btn').addEventListener('click', async () => {
+  if (!currentEntryId) return;
+  const res = await postJson('/knowledge/' + currentEntryId + '/share', {});
+  if (res.code === 0) {
+    showToast('转发成功，积分 +1', 'success');
+  } else {
+    showToast(res.message, 'error');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadDailyLaw();
+  const id = qs('id');
+  if (id) showDetail(id);
+  else loadKnowledge();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>青联合规监督社区 · 首页</title>
+<link rel="stylesheet" href="/static/common.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%231e3a8a'/><stop offset='1' stop-color='%23f59e0b'/></linearGradient></defs><path fill='url(%23g)' d='M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z'/><circle cx='32' cy='28' r='6' fill='%23fff'/><circle cx='18' cy='40' r='3' fill='%23fff'/><circle cx='46' cy='40' r='3' fill='%23fff'/><path d='M32 34 L18 40 L32 46 L46 40 Z' fill='none' stroke='%23fff' stroke-width='2'/></svg>">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" >首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container">
+
+  <!-- ============ Hero 品牌 ============ -->
+  <section class="hero anim-in">
+    <div class="hero-brand">
+      <svg class="brand-logo" viewBox="0 0 96 96" aria-label="青联合规监督社区标志">
+        <defs>
+          <linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="0.55" stop-color="#2563eb"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+          <radialGradient id="dawnGlow" cx="0.5" cy="0.42" r="0.55">
+            <stop offset="0" stop-color="#fff7ed" stop-opacity="0.95"/>
+            <stop offset="0.5" stop-color="#fbbf24" stop-opacity="0.55"/>
+            <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path fill="url(#shieldGrad)" d="M48 6 L82 19 V48 C82 70 68 84 48 90 C28 84 14 70 14 48 V19 Z"/>
+        <circle cx="48" cy="40" r="22" fill="url(#dawnGlow)"/>
+        <g stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0.78">
+          <line x1="48" y1="22" x2="48" y2="14"/>
+          <line x1="62" y1="28" x2="68" y2="22"/>
+          <line x1="34" y1="28" x2="28" y2="22"/>
+          <line x1="68" y1="42" x2="76" y2="42"/>
+          <line x1="20" y1="42" x2="28" y2="42"/>
+        </g>
+        <circle cx="48" cy="42" r="6.2" fill="#fff"/>
+        <circle cx="30" cy="58" r="3.6" fill="#fff"/>
+        <circle cx="66" cy="58" r="3.6" fill="#fff"/>
+        <path d="M48 42 L30 58 L48 66 L66 58 Z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <div class="brand-title">青联合规监督社区</div>
+        <div class="brand-subtitle">汇聚青少年力量，监督互联网平台不合理条款、数据滥用与未成年人保护缺失。</div>
+        <div class="hero-badges"><span>公开透明</span><span>积分共治</span><span>隐私优先</span></div>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="/tasks.html" data-module="tasks">提交举报</a>
+          <a class="btn btn-ghost" href="/knowledge.html" data-module="knowledge">学习法律</a>
+          <a class="btn btn-ghost" href="/quiz.html">条文背诵</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 每日简报 ============ -->
+  <section class="quote-card anim-in anim-fade-delay-1" data-module="ai_agent">
+    <svg class="quote-mark qm-top" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6 17h3l2-4V7H5v6h3l-2 4zm8 0h3l2-4V7h-6v6h3l-2 4z"/>
+    </svg>
+    <svg class="quote-mark qm-bottom" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6 17h3l2-4V7H5v6h3l-2 4zm8 0h3l2-4V7h-6v6h3l-2 4z"/>
+    </svg>
+    <div class="quote-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z M5 16L5.55 18.65L8 19L5.55 19.35L5 22L4.45 19.35L2 19L4.45 18.65L5 16Z M19 14L19.55 16.65L22 17L19.55 17.35L19 20L18.45 17.35L16 17L18.45 16.65L19 14Z"/>
+      </svg>
+      <span>每日简报</span>
+      <span class="quote-kind fallback" id="briefingKind">加载中</span>
+    </div>
+    <div class="quote-text" id="briefingText">
+      <span class="spin"></span>
+    </div>
+    <div class="quote-source" id="briefingSource"></div>
+  </section>
+
+  <!-- ============ 消息流（带 Tab 筛选）+ 新闻栏 ============ -->
+  <div class="home-grid">
+    <!-- 左侧：消息流 -->
+    <section class="card anim-in anim-fade-delay-2 feed-card">
+      <div class="feed-tabs">
+        <button class="feed-tab active" onclick="switchFeedTab('all', this)">全部</button>
+        <button class="feed-tab" onclick="switchFeedTab('mine', this)">我的动态</button>
+        <button class="feed-tab" onclick="switchFeedTab('subscriptions', this)">关注板块</button>
+        <button class="feed-tab" onclick="switchFeedTab('news', this)">新闻</button>
+      </div>
+      <ul class="feed-list" id="feedList">
+        <li class="feed-empty"><span class="spin"></span> 加载中</li>
+      </ul>
+    </section>
+
+    <!-- 右侧：新闻栏 + 系统通知 -->
+    <section class="anim-in anim-fade-delay-2">
+      <div class="card news-card" style="margin-bottom:.8rem;">
+        <h2 class="card-title-sm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" aria-hidden="true">
+            <path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/>
+          </svg>
+          新闻栏
+        </h2>
+        <div id="newsList"><span class="spin"></span> 加载中</div>
+      </div>
+
+      <div class="card notify-card" id="notifyCard">
+        <div class="notify-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" aria-hidden="true">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+          </svg>
+          <span>系统通知</span>
+          <span class="notify-badge" id="notifyBadge" style="display:none;">0</span>
+          <div class="notify-actions">
+            <button onclick="markAllNotifyRead()" title="全部已读">已读</button>
+            <button onclick="clearAllNotify()" title="清空">清空</button>
+          </div>
+        </div>
+        <ul class="notify-list" id="notifyList">
+          <li class="notify-empty"><span class="spin"></span> 加载中</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ 条文背诵游戏入口 ============ -->
+  <section class="card anim-in anim-fade-delay-3 quiz-entry">
+    <div class="quiz-entry-body">
+      <div class="quiz-entry-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <div class="quiz-entry-text">
+        <h2>条文背诵挑战</h2>
+        <p>从法律知识库随机抽取条款挖空，4 选 1 选择题，答对 +1 积分，每日上限 5 题。</p>
+        <div class="quiz-today-status" id="quizTodayInline">加载中...</div>
+      </div>
+      <a class="btn btn-primary" href="/quiz.html">开始挑战</a>
+    </div>
+  </section>
+
+  <section class="card anim-in anim-fade-delay-3 points-rules-card" id="pointsRulesCard">
+    <div class="points-rules-header">
+      <div>
+        <h2 class="card-title-sm">积分规则</h2>
+        <p class="muted">奖励、权限与消耗均按 Root 当前配置实时展示。</p>
+      </div>
+      <button class="secondary" id="togglePointsRules" aria-expanded="false">展开全部</button>
+    </div>
+    <div class="points-rule-summary" id="pointsRuleSummary"><span class="spin"></span> 加载中</div>
+    <div class="points-rule-details hidden" id="pointsRuleDetails"></div>
+  </section>
+
+  <!-- ============ 快捷入口 ============ -->
+  <section class="card anim-in anim-fade-delay-3">
+    <h2 class="card-title-sm">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" aria-hidden="true">
+        <path d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm10 0h6v6h-6v-6z"/>
+      </svg>
+      快捷入口
+    </h2>
+    <div class="quick-grid">
+      <a class="quick-tile" href="/tasks.html" data-module="tasks">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span class="tile-label">提交举报</span>
+      </a>
+      <a class="quick-tile" href="/forum.html" data-module="forum">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="tile-label">论坛交流</span>
+      </a>
+      <a class="quick-tile" href="/knowledge.html" data-module="knowledge">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span class="tile-label">法律知识</span>
+      </a>
+      <a class="quick-tile" href="/quiz.html">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span class="tile-label">条文背诵</span>
+      </a>
+      <a class="quick-tile" href="/rankings.html" data-module="points">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"/>
+          <polyline points="8.21,13.89 7,23 12,20 17,23 15.79,13.88"/>
+        </svg>
+        <span class="tile-label">积分排行</span>
+      </a>
+      <a class="quick-tile" href="/agent.html" data-module="ai_agent">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+        <span class="tile-label">AI导游</span>
+      </a>
+      <a class="quick-tile" href="https://www.12377.cn/" target="_blank" rel="noopener">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+        <span class="tile-label">网信办举报</span>
+      </a>
+      <a class="quick-tile" href="https://yhssglxt.miit.gov.cn/" target="_blank" rel="noopener">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+        <span class="tile-label">工信部申诉</span>
+      </a>
+    </div>
+  </section>
+
+</div>
+<script src="/static/common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  // 简报 + 通知 + 消息流 + 新闻（并行触发）
+  loadBriefing();
+  loadNotifyMessages();
+  loadFeed('all');
+  loadNews();
+  loadPointRules();
+
+  const animated = document.querySelectorAll('.anim-in');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+    }), { threshold: .08 });
+    animated.forEach(el => observer.observe(el));
+  } else animated.forEach(el => el.classList.add('is-visible'));
+
+  const hero = document.querySelector('.hero');
+  if (hero && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    hero.addEventListener('pointermove', e => {
+      const rect = hero.getBoundingClientRect();
+      hero.style.setProperty('--hero-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+      hero.style.setProperty('--hero-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+    });
+  }
+
+  // 首页游戏入口状态（复用 quiz/today 接口）
+  try {
+    const r = await getJson('/quiz/today');
+    if (r.code === 0) {
+      const d = r.data;
+      const el = document.getElementById('quizTodayInline');
+      if (el) el.textContent = '今日已答 ' + d.today_answered + '/' + d.daily_limit + ' 题，剩余 ' + d.remaining + ' 题';
+    } else {
+      const el = document.getElementById('quizTodayInline');
+      if (el) el.textContent = '登录后可参与挑战';
+    }
+  } catch (e) {
+    const el = document.getElementById('quizTodayInline');
+    if (el) el.textContent = '';
+  }
+
+});
+
+async function loadPointRules() {
+  const res = await getJson('/points/rules');
+  if (res.code !== 0) return;
+  const earn = res.data.earn, unlock = res.data.unlock;
+  document.getElementById('pointsRuleSummary').innerHTML = earn.slice(0, 4).map(r => `<span class="point-rule-chip"><strong>+${r.points}</strong> ${escapeHtml(r.name)}</span>`).join('');
+  document.getElementById('pointsRuleDetails').innerHTML = `
+    <div class="points-rule-columns"><div><h3>如何获得</h3>${earn.map(r => `<div class="point-rule-row"><span>${escapeHtml(r.name)}<small>${escapeHtml(r.note)}</small></span><strong>+${r.points}</strong></div>`).join('')}</div>
+    <div><h3>权限与消耗</h3>${unlock.map(r => `<div class="point-rule-row"><span>${escapeHtml(r.name)}</span><strong>${r.points} 分</strong></div>`).join('')}</div></div>
+    <p class="muted">${escapeHtml(res.data.note)}</p>`;
+  const toggle = document.getElementById('togglePointsRules');
+  toggle.addEventListener('click', () => {
+    const details = document.getElementById('pointsRuleDetails');
+    const opening = details.classList.contains('hidden');
+    details.classList.toggle('hidden');
+    toggle.textContent = opening ? '收起规则' : '展开全部';
+    toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+  });
+}
+</script>
+</body>
+</html>
