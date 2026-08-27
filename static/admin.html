@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/emails.html" data-module="emails">邮件代发</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div class="page-header">
+    <div class="page-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    </div>
+    <div>
+      <h1>管理后台</h1>
+      <div class="page-subtitle">审核举报、管理用户与系统配置</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="tabs" id="admin-tabs">
+      <span class="tab active" data-tab="tasks">任务审核</span>
+      <span class="tab" data-tab="reports">举报处理</span>
+      <span class="tab" data-tab="users">用户管理</span>
+      <span class="tab" data-tab="knowledge">知识库</span>
+      <span class="tab" data-tab="emails">邮件复核</span>
+      <span class="tab" data-tab="inbox">收件箱</span>
+      <span class="tab" data-tab="applications">权限申请</span>
+      <span class="tab" data-tab="settings">系统设置</span>
+      <span class="tab" data-tab="logs">管理日志</span>
+      <span class="tab" data-tab="honeypot">蜜罐日志</span>
+      <span class="tab root-only" data-tab="root" style="display:none;">Root 后台</span>
+    </div>
+  </div>
+
+  <div id="tab-tasks" class="tab-pane">
+    <div class="card">
+      <div class="tabs">
+        <span class="tab active" data-status="">全部</span>
+        <span class="tab" data-status="pending">待审核</span>
+        <span class="tab" data-status="reviewing">审核中</span>
+        <span class="tab" data-status="approved">已通过</span>
+        <span class="tab" data-status="rejected">已驳回</span>
+        <span class="tab" data-status="returned">已打回</span>
+      </div>
+      <div id="tasks-list">加载中...</div>
+      <div id="tasks-paging" class="pagination"></div>
+    </div>
+    <div class="card hidden" id="task-detail">
+      <h2>任务详情</h2>
+      <div id="task-info"></div>
+      <div id="task-images"></div>
+      <div id="review-form" class="hidden">
+        <label><input type="checkbox" id="confirm-sensitive"> 我已确认截图中不包含第三方真实姓名、手机号、人脸、家庭住址</label>
+        <select id="review-action">
+          <option value="approve">通过</option>
+          <option value="reject">驳回</option>
+          <option value="return">打回修改</option>
+        </select>
+        <select id="admin-label">
+          <option value="effective">有效</option>
+          <option value="needs_supplement">待补充</option>
+        </select>
+        <label><input type="checkbox" id="is-excellent"> 优秀案例（额外+5分）</label>
+        <textarea id="review-note" placeholder="审核备注"></textarea>
+        <button id="submit-review">提交审核</button>
+        <p id="review-msg"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-reports" class="tab-pane hidden">
+    <div class="card">
+      <div class="tabs">
+        <span class="tab active" data-rstatus="">全部</span>
+        <span class="tab" data-rstatus="pending">待处理</span>
+        <span class="tab" data-rstatus="resolved">已受理</span>
+        <span class="tab" data-rstatus="dismissed">已驳回</span>
+      </div>
+      <div id="reports-list">加载中...</div>
+      <div id="reports-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <div id="tab-users" class="tab-pane hidden">
+    <div class="card">
+      <div id="users-list">加载中...</div>
+      <div id="users-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <div id="tab-knowledge" class="tab-pane hidden">
+    <div class="card">
+      <h2>知识库条目</h2>
+      <div id="knowledge-list">加载中...</div>
+      <div id="knowledge-paging" class="pagination"></div>
+    </div>
+    <div class="card">
+      <h2 id="knowledge-form-title">新建条目</h2>
+      <form id="knowledge-form">
+        <input type="hidden" id="knowledge-id">
+        <select id="knowledge-category" required>
+          <option value="law">法律法规</option>
+          <option value="case">典型案例</option>
+          <option value="guide">维权指南</option>
+          <option value="qoder">Qoder档案</option>
+        </select>
+        <input id="knowledge-title" placeholder="标题" required>
+        <input id="knowledge-source" placeholder="官方来源链接（可选，仅 http/https）">
+        <label style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;">
+          <input type="checkbox" id="knowledge-official" style="width:auto;margin:0;"> 官方来源
+        </label>
+        <textarea id="knowledge-content" placeholder="正文（支持 Markdown）" required></textarea>
+        <div id="keywords-area">
+          <strong>关键词索引</strong>
+          <div id="keywords-list"></div>
+          <button type="button" id="add-keyword" class="secondary">添加关键词</button>
+        </div>
+        <button type="submit">保存</button>
+        <button type="button" id="knowledge-cancel" class="secondary">取消</button>
+        <p id="knowledge-msg"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="tab-emails" class="tab-pane hidden">
+    <div class="card">
+      <div class="tabs">
+        <span class="tab active" data-estatus="">全部</span>
+        <span class="tab" data-estatus="draft">草稿</span>
+        <span class="tab" data-estatus="sent">已发送</span>
+        <span class="tab" data-estatus="failed">失败</span>
+        <span class="tab" data-estatus="self_sent">自行发送</span>
+      </div>
+      <div id="emails-list">加载中...</div>
+      <div id="emails-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <div id="tab-inbox" class="tab-pane hidden">
+    <div class="card">
+      <h2>POP3 收件箱</h2>
+      <button onclick="fetchInbox()">立即收取</button>
+      <button onclick="loadInbox()" class="secondary">刷新列表</button>
+      <p id="inbox-msg"></p>
+      <div id="inbox-list">加载中...</div>
+      <div id="inbox-paging" class="pagination"></div>
+    </div>
+    <div class="card hidden" id="inbox-detail">
+      <h3 id="inbox-subject"></h3>
+      <p><strong>发件人：</strong><span id="inbox-sender"></span> &nbsp; <strong>收件人：</strong><span id="inbox-recipient"></span></p>
+      <p><strong>时间：</strong><span id="inbox-time"></span></p>
+      <pre id="inbox-body" style="white-space:pre-wrap;background:var(--bg);padding:1rem;border-radius:6px;"></pre>
+      <div class="form-row">
+        <input id="inbox-post-id" type="number" placeholder="关联主题 post_id">
+        <button onclick="publishInbox()">关联并公开</button>
+      </div>
+      <p id="inbox-publish-msg"></p>
+      <button onclick="closeInboxDetail()" class="secondary">关闭</button>
+    </div>
+  </div>
+
+  <div id="tab-applications" class="tab-pane hidden">
+    <div class="card">
+      <div class="tabs">
+        <span class="tab active" data-astatus="">全部</span>
+        <span class="tab" data-astatus="pending">待处理</span>
+        <span class="tab" data-astatus="approved">已通过</span>
+        <span class="tab" data-astatus="rejected">已驳回</span>
+      </div>
+      <div id="applications-list">加载中...</div>
+      <div id="applications-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <div id="tab-settings" class="tab-pane hidden">
+    <div class="card">
+      <h2>邮件服务器设置（POP3 / SMTP）</h2>
+      <div class="form-row">
+        <input id="smtp_host" placeholder="SMTP 服务器地址">
+        <input id="smtp_port" placeholder="SMTP 端口（默认 465）">
+      </div>
+      <div class="form-row">
+        <input id="smtp_user" placeholder="SMTP 用户名">
+        <input id="smtp_pass" placeholder="SMTP 密码（留空保持原值）" type="password">
+      </div>
+      <label style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;">
+        <input type="checkbox" id="smtp_use_ssl" style="width:auto;margin:0;"> 使用 SSL
+      </label>
+      <div class="form-row">
+        <input id="pop3_host" placeholder="POP3 服务器地址">
+        <input id="pop3_port" placeholder="POP3 端口（默认 995）">
+      </div>
+      <div class="form-row">
+        <input id="pop3_user" placeholder="POP3 用户名">
+        <input id="pop3_pass" placeholder="POP3 密码（留空保持原值）" type="password">
+      </div>
+      <label style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;">
+        <input type="checkbox" id="pop3_use_ssl" style="width:auto;margin:0;"> 使用 SSL
+      </label>
+      <input id="mail_from" placeholder="发件人邮箱（noreply@xxx）">
+      <button onclick="saveSettings('mail')">保存邮件设置</button>
+      <button onclick="testMail('smtp')" class="secondary">测试 SMTP</button>
+      <button onclick="testMail('pop3')" class="secondary">测试 POP3</button>
+      <p id="mail-msg"></p>
+    </div>
+    <div class="card">
+      <h2>AI API 设置</h2>
+      <p class="muted">以下模型共用 OpenAI Chat Completions 兼容接口。请按能力分配模型；联网任务不会在搜索能力缺失时静默退回普通生成。</p>
+      <input id="ai_api_url" placeholder="AI API URL（OpenAI 兼容 /chat/completions）">
+      <input id="ai_api_key" placeholder="AI API Key（留空保持原值）" type="password">
+      <div class="ai-model-grid">
+        <label class="ai-model-setting"><strong>AI 导游 / 通用对话模型</strong><input id="ai_model" placeholder="例如：支持中文的通用对话模型"><small>用途：社区导游、普通文本生成。要求：Chat Completions 兼容、中文能力良好，建议至少 16K 上下文。</small></label>
+        <label class="ai-model-setting"><strong>图片合规检测模型</strong><input id="ai_vision_model" placeholder="必须支持视觉输入"><small>用途：检测截图中的人脸、姓名、手机号等隐私。要求：支持 image_url 多模态输入，并能稳定输出 JSON 数组。</small></label>
+        <label class="ai-model-setting"><strong>联网搜索 / 新闻与简报模型</strong><input id="ai_search_model" placeholder="必须支持 web_search"><small>用途：新闻采集、政策简报、来源核验。要求：必须支持 web_search 工具并返回真实链接；不支持时任务会明确失败。</small></label>
+        <label class="ai-model-setting"><strong>审核与结构化判断模型</strong><input id="ai_review_model" placeholder="建议低幻觉、JSON 稳定"><small>用途：邮件初审与争议内容审核。要求：长中文上下文、低幻觉、稳定遵循 JSON 输出格式。</small></label>
+      </div>
+      <p class="muted">图片体积压缩由服务器本地 Pillow 引擎完成，不调用 AI，不要求模型具备图片压缩能力。</p>
+      <button onclick="saveSettings('ai')">保存 AI 设置</button>
+      <p id="ai-msg"></p>
+    </div>
+  </div>
+
+  <div id="tab-logs" class="tab-pane hidden">
+    <div class="card">
+      <h2>管理日志</h2>
+      <div id="logs-list">加载中...</div>
+      <div id="logs-paging" class="pagination"></div>
+    </div>
+  </div>
+
+  <div id="tab-honeypot" class="tab-pane hidden">
+    <div class="card">
+      <h2>蜜罐日志</h2>
+      <div id="honeypot-list">加载中...</div>
+      <div id="honeypot-paging" class="pagination"></div>
+    </div>
+  </div>
+</div>
+  <div id="tab-root" class="tab-pane hidden">
+    <div class="card">
+      <h2>风控监控</h2>
+      <p class="muted">服务器后台操作审计、异常 IP 检测、双因素验证、IP 封禁管理。仅 Root 可访问。</p>
+      <a href="/risk_control.html" class="btn">进入风控监控后台</a>
+    </div>
+    <div class="card">
+      <h2>服务开关</h2>
+      <p class="muted">仅 Root 可开启/关闭普通服务；认证、Root 与配置接口不受影响。</p>
+      <div id="root-services">加载中...</div>
+    </div>
+    <div class="card">
+      <h2>管理员管理</h2>
+      <div id="root-admins">加载中...</div>
+    </div>
+    <div class="card">
+      <h2>封禁管理</h2>
+      <div class="form-row">
+        <input id="ban-email-input" placeholder="要封禁的邮箱">
+        <input id="ban-email-reason" placeholder="原因（可选）">
+        <button onclick="banEmail()">封禁邮箱</button>
+      </div>
+      <div class="form-row">
+        <input id="ban-device-input" placeholder="设备指纹">
+        <input id="ban-device-reason" placeholder="原因（可选）">
+        <button onclick="banDevice()">封禁设备</button>
+      </div>
+      <div id="bans-list">加载中...</div>
+      <div id="bans-paging" class="pagination"></div>
+    </div>
+    <div class="card">
+      <h2>IP 自适应防护策略</h2>
+      <p class="muted">仅 Root 可修改。所有改动、自动封禁、降级恢复和人工操作都会留痕。</p>
+      <div id="ip-security-settings" class="form-row"></div>
+      <button onclick="saveIpSecuritySettings()">保存防护策略</button>
+      <p id="ip-security-msg"></p>
+    </div>
+    <div class="card">
+      <h2>图片存储与积分规则</h2>
+      <p class="muted">容量单位均为字节；修改后立即影响新上传和首页积分规则展示。设为 0 可关闭对应积分奖励。</p>
+      <div id="operational-settings" class="root-settings-grid"></div>
+      <button onclick="saveOperationalSettings()">保存图片与积分参数</button>
+      <p id="operational-settings-msg"></p>
+    </div>
+    <div class="card">
+      <h2>IP 封禁与访问上限</h2>
+      <div class="form-row">
+        <input id="ip-ban-address" placeholder="IPv4 或 IPv6 地址">
+        <input id="ip-ban-minutes" type="number" min="1" placeholder="封禁分钟数">
+        <input id="ip-ban-reason" placeholder="封禁原因（可选）">
+        <button onclick="banIpAddress()">封禁 IP</button>
+      </div>
+      <div id="ip-controls-list">加载中...</div>
+      <div id="ip-controls-paging" class="pagination"></div>
+    </div>
+    <div class="card">
+      <h2>IP 安全事件</h2>
+      <div id="ip-events-list">加载中...</div>
+      <div id="ip-events-paging" class="pagination"></div>
+    </div>
+  </div>
+
+<script src="/static/common.js"></script>
+<script>
+let currentUser = null;
+let currentTask = null;
+let currentStatus = '';
+let currentRStatus = '';
+let currentEStatus = '';
+let currentAStatus = '';
+let canvases = [];
+
+async function init() {
+  const ok = await requireAuth();
+  if (!ok) return;
+  const me = await getJson('/auth/me');
+  if (me.code !== 0) { clearAuth(); location.href='/login.html'; return; }
+  currentUser = me.data;
+  if (!['moderator','admin','sysadmin','root'].includes(currentUser.role)) { location.href='/'; return; }
+  if (currentUser.role === 'root') {
+    document.querySelectorAll('.root-only').forEach(el => el.style.display = '');
+    loadRootServices();
+    loadRootAdmins();
+    loadBans();
+    loadIpSecuritySettings();
+    loadOperationalSettings();
+    loadIpControls();
+    loadIpEvents();
+  }
+  if (currentUser.role === 'moderator') {
+    document.querySelectorAll('#admin-tabs .tab').forEach(t => { if (t.dataset.tab !== 'reports') t.style.display='none'; });
+    switchTab('reports');
+  } else {
+    switchTab('tasks');
+    loadTasks();
+    loadUsers();
+    loadKnowledge();
+    loadAdminEmails();
+    loadInbox();
+    loadApplications();
+    loadSettings();
+    loadLogs();
+    loadHoneypot();
+  }
+  loadReports();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('#admin-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + tab));
+}
+
+document.querySelectorAll('#admin-tabs .tab').forEach(t => {
+  t.addEventListener('click', () => { if (t.style.display !== 'none') switchTab(t.dataset.tab); });
+});
+
+// 任务审核
+async function loadTasks(page = 1) {
+  const url = '/admin/tasks?page=' + page + '&limit=20' + (currentStatus ? '&status=' + currentStatus : '');
+  const res = await getJson(url);
+  const el = document.getElementById('tasks-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>平台</th><th>类型</th><th>状态</th><th>提交时间</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(t => `<tr>
+      <td>${t.id}</td><td>${escapeHtml(t.platform_name)}</td><td>${escapeHtml(t.issue_type)}</td>
+      <td>${t.status}${t.is_mosaicked ? '·已打码' : ''}</td><td>${formatTime(t.created_at)}</td>
+      <td><button onclick="openTask(${t.id})">审核</button></td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('tasks-paging', res.data.page, res.data.limit, res.data.total, loadTasks);
+}
+
+document.querySelectorAll('#tab-tasks .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#tab-tasks .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentStatus = t.dataset.status;
+    loadTasks();
+  });
+});
+
+async function openTask(id) {
+  const res = await getJson('/tasks/' + id);
+  const detail = document.getElementById('task-detail');
+  detail.classList.remove('hidden');
+  if (res.code !== 0) { detail.innerHTML = '<p>' + res.message + '</p>'; return; }
+  const t = res.data;
+  currentTask = t;
+  document.getElementById('task-info').innerHTML = `
+    <p><strong>平台：</strong>${escapeHtml(t.platform_name)} · <strong>类型：</strong>${escapeHtml(t.issue_type)}</p>
+    <p><strong>状态：</strong>${t.status} · <strong>提交者ID：</strong>${t.user_id}</p>
+    <div class="card"><strong>条款原文</strong><br>${renderMarkdown(t.clause_text)}</div>
+    <div class="card"><strong>说明</strong><br>${renderMarkdown(t.description)}</div>
+    ${t.law_reference ? `<p><strong>法律依据：</strong>${escapeHtml(t.law_reference)}</p>` : ''}
+  `;
+  const imgDiv = document.getElementById('task-images');
+  imgDiv.innerHTML = '';
+  canvases = [];
+  if (t.images.length) {
+    const notice = document.createElement('div');
+    notice.style.cssText = 'background:#fef3c7;color:#92400e;padding:.5rem;border-radius:.375rem;margin-bottom:.5rem;';
+    notice.innerHTML = '<strong>脱敏提示：</strong>请确认截图中不包含第三方真实姓名、手机号、人脸、家庭住址。如有，请在下方图片上拖拽绘制黑色马赛克，或勾选确认后驳回/通过。';
+    imgDiv.appendChild(notice);
+    t.images.forEach((src, idx) => {
+      const wrap = document.createElement('div');
+      wrap.style.marginBottom = '1rem';
+      const label = document.createElement('div');
+      label.textContent = '图片 ' + (idx + 1);
+      const cvs = document.createElement('canvas');
+      cvs.className = 'mosaic-canvas';
+      const img = new Image();
+      img.src = '/uploads/' + src;
+      img.onload = () => {
+        cvs.width = img.naturalWidth;
+        cvs.height = img.naturalHeight;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        setupMosaic(cvs, ctx, img);
+      };
+      const reset = document.createElement('button');
+      reset.textContent = '撤销本图打码';
+      reset.className = 'secondary';
+      reset.style.marginTop = '.25rem';
+      reset.addEventListener('click', () => {
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+      });
+      wrap.appendChild(label);
+      wrap.appendChild(cvs);
+      wrap.appendChild(reset);
+      imgDiv.appendChild(wrap);
+      canvases.push({ idx, canvas: cvs });
+    });
+    const mosaicBtn = document.createElement('button');
+    mosaicBtn.textContent = '提交打码（替换原图）';
+    mosaicBtn.addEventListener('click', submitMosaic);
+    imgDiv.appendChild(mosaicBtn);
+  }
+  document.getElementById('review-form').classList.remove('hidden');
+  document.getElementById('confirm-sensitive').checked = false;
+  document.getElementById('review-action').value = 'approve';
+  document.getElementById('admin-label').value = t.admin_label || 'effective';
+  document.getElementById('is-excellent').checked = false;
+  document.getElementById('review-note').value = '';
+  document.getElementById('review-msg').textContent = '';
+}
+
+function setupMosaic(canvas, ctx, img) {
+  let drawing = false, sx, sy;
+  canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    sx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    sy = (e.clientY - rect.top) * (canvas.height / rect.height);
+    drawing = true;
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const ex = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const ey = (e.clientY - rect.top) * (canvas.height / rect.height);
+    ctx.drawImage(img, 0, 0);
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fillRect(sx, sy, ex - sx, ey - sy);
+  });
+  canvas.addEventListener('mouseup', () => { drawing = false; });
+  canvas.addEventListener('mouseleave', () => { drawing = false; });
+}
+
+async function submitMosaic() {
+  if (!currentTask) return;
+  const images = canvases.map(c => ({ index: c.idx, data: c.canvas.toDataURL('image/png') }));
+  const res = await postJson('/admin/tasks/' + currentTask.id + '/mosaic', { images });
+  const msg = document.getElementById('review-msg');
+  if (res.code === 0) {
+    msg.textContent = '打码成功，原图已替换。';
+    msg.style.color = 'green';
+    currentTask = res.data;
+  } else {
+    msg.textContent = res.message;
+    msg.style.color = 'var(--danger)';
+  }
+}
+
+document.getElementById('submit-review').addEventListener('click', async () => {
+  if (!currentTask) return;
+  const body = {
+    action: document.getElementById('review-action').value,
+    review_note: document.getElementById('review-note').value,
+    is_excellent: document.getElementById('is-excellent').checked,
+    confirm_no_sensitive: document.getElementById('confirm-sensitive').checked,
+    admin_label: document.getElementById('admin-label').value,
+  };
+  const res = await postJson('/admin/tasks/' + currentTask.id + '/review', body);
+  const msg = document.getElementById('review-msg');
+  if (res.code === 0) {
+    msg.textContent = '审核完成';
+    msg.style.color = 'green';
+    loadTasks();
+  } else {
+    msg.textContent = res.message;
+    msg.style.color = 'var(--danger)';
+  }
+});
+
+// 举报
+async function loadReports(page = 1) {
+  const url = '/admin/reports?page=' + page + '&limit=20' + (currentRStatus ? '&status=' + currentRStatus : '');
+  const res = await getJson(url);
+  const el = document.getElementById('reports-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>举报人</th><th>目标</th><th>原因</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(r => `<tr>
+      <td>${r.id}</td><td>${escapeHtml(r.reporter_nickname)}</td><td>${r.target_type}:${r.target_id}</td>
+      <td>${escapeHtml(r.reason)}</td><td>${r.status}</td><td>${formatTime(r.created_at)}</td>
+      <td>
+        ${r.status === 'pending' ? `<button onclick="handleReport(${r.id},'resolve')">受理</button> <button onclick="handleReport(${r.id},'dismiss')" class="secondary">驳回</button>` : '-'}
+      </td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('reports-paging', res.data.page, res.data.limit, res.data.total, loadReports);
+}
+
+document.querySelectorAll('#tab-reports .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#tab-reports .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentRStatus = t.dataset.rstatus;
+    loadReports();
+  });
+});
+
+async function handleReport(id, action) {
+  const res = await postJson('/admin/reports/' + id + '/handle', { action });
+  showToast(res.code === 0 ? '处理成功' : res.message, res.code === 0 ? 'success' : 'error');
+  loadReports();
+}
+
+// 用户管理
+async function loadUsers(page = 1) {
+  const res = await getJson('/admin/users?page=' + page + '&limit=20');
+  const el = document.getElementById('users-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>昵称</th><th>邮箱</th><th>角色</th><th>积分</th><th>可疑</th><th>封禁</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(u => `<tr>
+      <td>${u.id}</td><td>${escapeHtml(u.nickname)}</td><td>${escapeHtml(u.email)}</td>
+      <td>${u.role}</td><td>${u.points}</td><td>${u.is_suspicious ? '是' : ''}</td><td>${u.is_banned ? '是' : ''}</td>
+      <td>
+        <select onchange="changeRole(${u.id},this.value)">
+          <option value="user" ${u.role==='user'?'selected':''}>user</option>
+          <option value="moderator" ${u.role==='moderator'?'selected':''}>moderator</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
+          <option value="sysadmin" ${u.role==='sysadmin'?'selected':''}>sysadmin</option>
+        </select>
+        <button onclick="banUser(${u.id},${!u.is_banned})">${u.is_banned ? '解封' : '封禁'}</button>
+        <button onclick="banEmailByUser('${escapeHtml(u.email)}')" class="secondary">封邮箱</button>
+        ${currentUser.role === 'root' ? `<button onclick="banDeviceByUser('${escapeHtml(u.device_fingerprint || '')}')" class="secondary">封设备</button>` : ''}
+      </td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('users-paging', res.data.page, res.data.limit, res.data.total, loadUsers);
+}
+
+async function changeRole(id, role) {
+  const res = await postJson('/admin/users/' + id + '/role', { role });
+  showToast(res.code === 0 ? '角色已更新' : res.message, res.code === 0 ? 'success' : 'error');
+  loadUsers();
+}
+async function banUser(id, isBanned) {
+  const res = await postJson('/admin/users/' + id + '/ban', { is_banned: isBanned });
+  showToast(res.code === 0 ? '操作成功' : res.message, res.code === 0 ? 'success' : 'error');
+  loadUsers();
+}
+
+// 知识库
+async function loadKnowledge(page = 1) {
+  const res = await getJson('/knowledge?page=' + page + '&limit=20');
+  const el = document.getElementById('knowledge-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = res.data.items.map(k => `<div style="margin-bottom:.5rem;border-bottom:1px solid var(--border);padding-bottom:.5rem;">
+    <strong>${escapeHtml(k.title)}</strong> <span class="muted">${k.category}${k.is_official ? '·官方' : ''}</span>
+    <button onclick="editKnowledge(${k.id})" class="secondary">编辑</button>
+    <button onclick="deleteKnowledge(${k.id})" class="danger">删除</button>
+  </div>`).join('') || '暂无';
+  renderPagination('knowledge-paging', res.data.page, res.data.limit, res.data.total, loadKnowledge);
+}
+
+function renderKeywords(kws) {
+  const el = document.getElementById('keywords-list');
+  el.innerHTML = (kws || []).map((kw, idx) => `<div class="form-row" style="margin-bottom:.5rem;" data-kidx="${idx}">
+    <input placeholder="关键词" class="kw-keyword" value="${escapeHtml(kw.keyword)}">
+    <input placeholder="对应法律条款" class="kw-clause" value="${escapeHtml(kw.clause)}">
+    <button type="button" onclick="this.parentElement.remove()" class="danger">删除</button>
+  </div>`).join('');
+}
+
+async function editKnowledge(id) {
+  const res = await getJson('/knowledge/' + id);
+  if (res.code !== 0) return;
+  const k = res.data;
+  document.getElementById('knowledge-id').value = id;
+  document.getElementById('knowledge-category').value = k.category;
+  document.getElementById('knowledge-title').value = k.title;
+  document.getElementById('knowledge-source').value = k.source_url || '';
+  document.getElementById('knowledge-official').checked = k.is_official;
+  document.getElementById('knowledge-content').value = k.content;
+  document.getElementById('knowledge-form-title').textContent = '编辑条目';
+  renderKeywords(k.keywords);
+}
+
+async function deleteKnowledge(id) {
+  if (!await confirmDialog('确认删除该知识库条目？')) return;
+  const res = await deleteJson('/admin/knowledge/' + id);
+  showToast(res.code === 0 ? '删除成功' : res.message, res.code === 0 ? 'success' : 'error');
+  loadKnowledge();
+}
+
+function collectKeywords() {
+  const rows = document.querySelectorAll('#keywords-list > div');
+  const kws = [];
+  rows.forEach(row => {
+    const keyword = row.querySelector('.kw-keyword').value.trim();
+    const clause = row.querySelector('.kw-clause').value.trim();
+    if (keyword) kws.push({ keyword, clause });
+  });
+  return kws;
+}
+
+document.getElementById('knowledge-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    category: document.getElementById('knowledge-category').value,
+    title: document.getElementById('knowledge-title').value,
+    content: document.getElementById('knowledge-content').value,
+    source_url: document.getElementById('knowledge-source').value,
+    is_official: document.getElementById('knowledge-official').checked,
+    keywords: collectKeywords(),
+  };
+  const id = document.getElementById('knowledge-id').value;
+  const res = id ? await putJson('/admin/knowledge/' + id, body) : await postJson('/admin/knowledge', body);
+  const msg = document.getElementById('knowledge-msg');
+  if (res.code === 0) {
+    msg.textContent = '保存成功';
+    msg.style.color = 'green';
+    document.getElementById('knowledge-form').reset();
+    document.getElementById('knowledge-id').value = '';
+    document.getElementById('knowledge-form-title').textContent = '新建条目';
+    renderKeywords([]);
+    loadKnowledge();
+  } else {
+    msg.textContent = res.message;
+    msg.style.color = 'var(--danger)';
+  }
+});
+
+document.getElementById('knowledge-cancel').addEventListener('click', () => {
+  document.getElementById('knowledge-form').reset();
+  document.getElementById('knowledge-id').value = '';
+  document.getElementById('knowledge-form-title').textContent = '新建条目';
+  renderKeywords([]);
+});
+
+document.getElementById('add-keyword').addEventListener('click', () => {
+  const div = document.createElement('div');
+  div.className = 'form-row';
+  div.style.marginBottom = '.5rem';
+  div.innerHTML = `<input placeholder="关键词" class="kw-keyword"><input placeholder="对应法律条款" class="kw-clause"><button type="button" onclick="this.parentElement.remove()" class="danger">删除</button>`;
+  document.getElementById('keywords-list').appendChild(div);
+});
+
+// 邮件复核
+async function loadAdminEmails(page = 1) {
+  const url = '/emails/admin/emails?page=' + page + '&limit=20' + (currentEStatus ? '&status=' + currentEStatus : '');
+  const res = await getJson(url);
+  const el = document.getElementById('emails-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>用户</th><th>平台</th><th>收件人</th><th>方式</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(e => `<tr>
+      <td>${e.id}</td><td>${escapeHtml(e.nickname)}</td><td>${escapeHtml(e.platform_name)}</td>
+      <td>${escapeHtml(e.recipient)}</td><td>${e.send_method === 'proxy' ? '平台代发' : '自行发送'}</td>
+      <td>${e.status}</td><td>${formatTime(e.created_at)}</td>
+      <td>${e.status !== 'draft' ? `<button onclick="reviewEmail(${e.id})" class="secondary">复核</button>` : '-'}</td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('emails-paging', res.data.page, res.data.limit, res.data.total, loadAdminEmails);
+}
+
+document.querySelectorAll('#tab-emails .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#tab-emails .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentEStatus = t.dataset.estatus;
+    loadAdminEmails();
+  });
+});
+
+async function reviewEmail(id) {
+  const label = await promptDialog('请输入复核结果：effective（有效）或 needs_supplement（待补充）', '', '邮件复核');
+  if (!label || !['effective','needs_supplement'].includes(label)) { showToast('无效输入', 'error'); return; }
+  const res = await postJson('/emails/admin/emails/' + id + '/review', { admin_label: label });
+  showToast(res.code === 0 ? '复核完成' : res.message, res.code === 0 ? 'success' : 'error');
+  loadAdminEmails();
+}
+
+// POP3 收件箱
+async function loadInbox(page = 1) {
+  const res = await getJson('/emails/admin/emails/inbox?page=' + page + '&limit=20');
+  const el = document.getElementById('inbox-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  if (!res.data.items.length) { el.innerHTML = '<p>暂无邮件</p>'; document.getElementById('inbox-paging').innerHTML = ''; return; }
+  el.innerHTML = '<table><thead><tr><th>状态</th><th>发件人</th><th>主题</th><th>收件人</th><th>时间</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(m => `<tr style="${m.is_read ? '' : 'font-weight:700;'}">
+      <td>${m.is_read ? '已读' : '未读'}</td>
+      <td>${escapeHtml(m.sender)}</td>
+      <td>${escapeHtml(m.subject || '(无主题)')}</td>
+      <td>${escapeHtml(m.recipient)}</td>
+      <td>${formatTime(m.received_at)}</td>
+      <td><button onclick="viewInbox(${m.id})" class="secondary">查看</button></td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('inbox-paging', res.data.page, res.data.limit, res.data.total, loadInbox);
+}
+
+async function fetchInbox() {
+  const btn = document.querySelector('#tab-inbox button');
+  btn.disabled = true;
+  const res = await postJson('/emails/admin/emails/fetch-inbox', {});
+  btn.disabled = false;
+  const msg = document.getElementById('inbox-msg');
+  if (res.code === 0) {
+    msg.textContent = `收取完成：新增 ${res.data.fetched} 封，跳过 ${res.data.skipped} 封，服务器共 ${res.data.total} 封`;
+    msg.style.color = 'green';
+    loadInbox();
+  } else {
+    msg.textContent = res.message;
+    msg.style.color = 'var(--danger)';
+  }
+}
+
+async function viewInbox(id) {
+  setCurrentInboxId(id);
+  const res = await getJson('/emails/admin/emails/inbox/' + id);
+  if (res.code !== 0) { showToast(res.message, 'error'); return; }
+  const m = res.data;
+  document.getElementById('inbox-subject').textContent = m.subject || '(无主题)';
+  document.getElementById('inbox-sender').textContent = m.sender;
+  document.getElementById('inbox-recipient').textContent = m.recipient;
+  document.getElementById('inbox-time').textContent = formatTime(m.received_at);
+  document.getElementById('inbox-body').textContent = m.body;
+  document.getElementById('inbox-detail').classList.remove('hidden');
+  loadInbox();
+}
+
+function closeInboxDetail() {
+  document.getElementById('inbox-detail').classList.add('hidden');
+}
+
+// 权限申请
+async function loadApplications(page = 1) {
+  const url = '/admin/applications?page=' + page + '&limit=20' + (currentAStatus ? '&status=' + currentAStatus : '');
+  const res = await getJson(url);
+  const el = document.getElementById('applications-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>用户</th><th>邮箱</th><th>类型</th><th>理由</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(a => `<tr>
+      <td>${a.id}</td><td>${escapeHtml(a.nickname)}</td><td>${escapeHtml(a.email)}</td>
+      <td>${a.type === 'volunteer' ? '志愿者' : '管理员'}</td>
+      <td>${escapeHtml(a.reason || '-')}</td><td>${a.status}</td><td>${formatTime(a.created_at)}</td>
+      <td>${a.status === 'pending' ? `<button onclick="reviewApplication(${a.id},'approved')">通过</button> <button onclick="reviewApplication(${a.id},'rejected')" class="secondary">驳回</button>` : '-'}</td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('applications-paging', res.data.page, res.data.limit, res.data.total, loadApplications);
+}
+
+document.querySelectorAll('#tab-applications .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#tab-applications .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentAStatus = t.dataset.astatus;
+    loadApplications();
+  });
+});
+
+async function reviewApplication(id, status) {
+  const note = await promptDialog('请输入审批备注（可选）：', '', '权限审批') || '';
+  const res = await postJson('/admin/applications/' + id + '/review', { status, note });
+  showToast(res.code === 0 ? '处理成功' : res.message, res.code === 0 ? 'success' : 'error');
+  loadApplications();
+}
+
+// 系统设置
+async function loadSettings() {
+  const mail = await getJson('/admin/settings?group=mail');
+  if (mail.code === 0) {
+    const s = mail.data;
+    document.getElementById('smtp_host').value = s.smtp_host || '';
+    document.getElementById('smtp_port').value = s.smtp_port || '';
+    document.getElementById('smtp_user').value = s.smtp_user || '';
+    document.getElementById('smtp_pass').value = '';
+    document.getElementById('smtp_use_ssl').checked = (s.smtp_use_ssl || '1') === '1';
+    document.getElementById('pop3_host').value = s.pop3_host || '';
+    document.getElementById('pop3_port').value = s.pop3_port || '';
+    document.getElementById('pop3_user').value = s.pop3_user || '';
+    document.getElementById('pop3_pass').value = '';
+    document.getElementById('pop3_use_ssl').checked = (s.pop3_use_ssl || '1') === '1';
+    document.getElementById('mail_from').value = s.mail_from || '';
+  }
+  const ai = await getJson('/admin/settings?group=ai');
+  if (ai.code === 0) {
+    const s = ai.data;
+    document.getElementById('ai_api_url').value = s.ai_api_url || '';
+    document.getElementById('ai_api_key').value = '';
+    document.getElementById('ai_model').value = s.ai_model || '';
+    document.getElementById('ai_vision_model').value = s.ai_vision_model || '';
+    document.getElementById('ai_search_model').value = s.ai_search_model || '';
+    document.getElementById('ai_review_model').value = s.ai_review_model || '';
+  }
+}
+
+async function saveSettings(group) {
+  const keys = group === 'mail'
+    ? ['smtp_host','smtp_port','smtp_user','smtp_pass','smtp_use_ssl','pop3_host','pop3_port','pop3_user','pop3_pass','pop3_use_ssl','mail_from']
+    : ['ai_api_url','ai_api_key','ai_model','ai_vision_model','ai_search_model','ai_review_model'];
+  let okCount = 0, failMsg = '';
+  for (const key of keys) {
+    let el = document.getElementById(key);
+    let value = el.type === 'checkbox' ? (el.checked ? '1' : '0') : el.value;
+    if (key.endsWith('_pass') || key.endsWith('_key')) {
+      if (!value) continue; // 留空保持原值
+    }
+    const res = await putJson('/admin/settings', { key, value });
+    if (res.code === 0) okCount++;
+    else failMsg = res.message;
+  }
+  const msgId = group + '-msg';
+  const msg = document.getElementById(msgId);
+  if (!failMsg) {
+    msg.textContent = '设置已保存';
+    msg.style.color = 'green';
+    loadSettings();
+  } else {
+    msg.textContent = failMsg;
+    msg.style.color = 'var(--danger)';
+  }
+}
+
+async function testMail(kind) {
+  const res = await postJson('/admin/settings/test-' + kind, {});
+  const msg = document.getElementById('mail-msg');
+  msg.textContent = res.code === 0 ? (kind === 'smtp' ? 'SMTP 连接成功' : 'POP3 连接成功，邮件数：' + (res.data.messages || 0)) : res.message;
+  msg.style.color = res.code === 0 ? 'green' : 'var(--danger)';
+}
+
+// 日志
+async function loadLogs(page = 1) {
+  const res = await getJson('/admin/logs?page=' + page + '&limit=20');
+  const el = document.getElementById('logs-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>时间</th><th>管理员</th><th>动作</th><th>详情</th></tr></thead><tbody>' +
+    res.data.items.map(l => `<tr><td>${formatTime(l.created_at)}</td><td>${escapeHtml(l.admin_nickname)}</td><td>${escapeHtml(l.action)}</td><td>${escapeHtml(l.detail)}</td></tr>`).join('') + '</tbody></table>';
+  renderPagination('logs-paging', res.data.page, res.data.limit, res.data.total, loadLogs);
+}
+
+async function loadHoneypot(page = 1) {
+  const res = await getJson('/admin/honeypot?page=' + page + '&limit=20');
+  const el = document.getElementById('honeypot-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>时间</th><th>IP</th><th>路径</th><th>Cookie</th><th>Payload</th><th>详情</th></tr></thead><tbody>' +
+    res.data.items.map(h => `<tr><td>${formatTime(h.created_at)}</td><td>${escapeHtml(h.ip)}</td><td>${escapeHtml(h.path)}</td><td>${escapeHtml(h.cookie_data)}</td><td>${escapeHtml(h.payload)}</td><td>${escapeHtml(h.detail)}</td></tr>`).join('') + '</tbody></table>';
+  renderPagination('honeypot-paging', res.data.page, res.data.limit, res.data.total, loadHoneypot);
+}
+
+
+function setCurrentInboxId(id) {
+  window.currentInboxId = id;
+}
+
+async function publishInbox() {
+  if (!window.currentInboxId) return;
+  const postId = document.getElementById('inbox-post-id').value;
+  if (!postId) { showToast('请输入主题 ID', 'error'); return; }
+  const res = await postJson('/emails/admin/emails/inbox/' + window.currentInboxId + '/publish', { post_id: parseInt(postId) });
+  const msg = document.getElementById('inbox-publish-msg');
+  msg.textContent = res.code === 0 ? '已关联并公开' : res.message;
+  msg.style.color = res.code === 0 ? 'green' : 'var(--danger)';
+}
+
+async function loadRootServices() {
+  const res = await getJson('/root/services');
+  const el = document.getElementById('root-services');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = Object.entries(res.data).map(([name, enabled]) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem;border-bottom:1px solid var(--border);">
+      <span>${name}</span>
+      <label style="display:flex;align-items:center;gap:.5rem;">
+        <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleService('${name}', this.checked)"> 开启
+      </label>
+    </div>`).join('');
+}
+
+async function toggleService(name, enabled) {
+  const res = await putJson('/root/services/' + name, { enabled });
+  showToast(res.code === 0 ? '服务状态已更新' : res.message, res.code === 0 ? 'success' : 'error');
+  loadRootServices();
+}
+
+async function loadRootAdmins() {
+  const res = await getJson('/root/admins');
+  const el = document.getElementById('root-admins');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>昵称</th><th>邮箱</th><th>角色</th><th>封禁</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(a => `<tr>
+      <td>${a.id}</td><td>${escapeHtml(a.nickname)}</td><td>${escapeHtml(a.email)}</td>
+      <td>${a.role}</td><td>${a.is_banned ? '是' : ''}</td>
+      <td>
+        <select onchange="setAdminRole(${a.id},this.value)"><option value="admin" ${a.role==='admin'?'selected':''}>admin</option><option value="sysadmin" ${a.role==='sysadmin'?'selected':''}>sysadmin</option></select>
+        <button onclick="banAdmin(${a.id})">封禁</button>
+      </td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+async function setAdminRole(id, role) {
+  const res = await postJson('/root/admins/' + id + '/role', { user_id: id, role });
+  showToast(res.code === 0 ? '角色已更新' : res.message, res.code === 0 ? 'success' : 'error');
+  loadRootAdmins();
+}
+
+async function banAdmin(id) {
+  const res = await postJson('/root/admins/' + id + '/ban', {});
+  showToast(res.code === 0 ? '已封禁' : res.message, res.code === 0 ? 'success' : 'error');
+  loadRootAdmins();
+}
+
+async function loadBans(page = 1) {
+  const res = await getJson('/admin/bans?page=' + page + '&limit=20');
+  const el = document.getElementById('bans-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>类型</th><th>目标</th><th>原因</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(b => `<tr>
+      <td>${b.id}</td><td>${b.ban_type}</td><td>${escapeHtml(b.target)}</td><td>${escapeHtml(b.reason || '-')}</td>
+      <td>${b.is_active ? '生效中' : '已解除'}</td><td>${formatTime(b.created_at)}</td>
+      <td>${b.is_active ? `<button onclick="liftBan(${b.id})" class="secondary">解除</button>` : '-'}</td>
+    </tr>`).join('') + '</tbody></table>';
+  renderPagination('bans-paging', res.data.page, res.data.limit, res.data.total, loadBans);
+}
+
+const ipSecurityFields = {
+  threshold_ip_protection_enabled: '防护开关（1 开 / 0 关）',
+  threshold_ip_window_seconds: '统计窗口（秒）',
+  threshold_ip_default_limit: '默认窗口访问上限',
+  threshold_ip_min_limit: '降级后的最低访问上限',
+  threshold_ip_degrade_percent: '每次触发下调比例（%）',
+  threshold_ip_degrade_minutes: '降级保持时间（分钟）',
+  threshold_ip_ban_minutes: '基础封禁时间（分钟）',
+  threshold_ip_ban_max_minutes: '最大封禁时间（分钟）',
+  threshold_ip_ban_escalation_percent: '重复触发封禁递增（%）',
+  threshold_ip_recovery_percent: '每轮恢复比例（%）'
+};
+
+const operationalFields = {
+  threshold_daily_image_bytes: '每用户每日图片保存总量（字节）',
+  threshold_upload_source_max_bytes: '源文件上传上限（字节）',
+  threshold_upload_min_target_bytes: '可选压缩最小体积（字节）',
+  threshold_upload_default_target_bytes: '普通用户默认目标体积（字节）',
+  threshold_upload_selectable_max_bytes: '高积分用户可选最大体积（字节）',
+  threshold_upload_original_max_bytes: '原图保留硬上限（字节）',
+  threshold_upload_max_dimension: '压缩后最长边像素',
+  threshold_upload_max_pixels: '源图片最大总像素',
+  threshold_upload_max_count: '单次最多图片数',
+  threshold_points_upload_quality_choice: '自选压缩体积积分门槛',
+  threshold_points_upload_original: '保留原图积分门槛',
+  threshold_reward_signin_base: '每日签到奖励',
+  threshold_reward_signin_streak7_bonus: '连续签到第 7 天额外奖励',
+  threshold_reward_task_upload_approved: '举报证据审核通过奖励',
+  threshold_reward_task_evidence_valid: '有效举报追加奖励',
+  threshold_reward_task_excellent: '优秀举报追加奖励',
+  threshold_reward_email_initial_approved: '邮件通过 AI 初审奖励',
+  threshold_reward_email_valid: '有效代发邮件奖励',
+  threshold_reward_post_featured: '帖子加精奖励',
+  threshold_reward_reply_ten_likes: '回复十赞奖励',
+  threshold_reward_board_claim: '板块认领邮件奖励',
+  threshold_cost_board_claim_abandon: '放弃板块认领扣除',
+  threshold_reward_knowledge_share: '知识条文转发奖励',
+  threshold_reward_quiz_correct: '背诵答对奖励',
+  threshold_quiz_daily_limit: '每日背诵计分题数上限'
+};
+
+async function loadIpSecuritySettings() {
+  const res = await getJson('/root/thresholds');
+  const el = document.getElementById('ip-security-settings');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = Object.entries(ipSecurityFields).map(([key, label]) => `
+    <label style="display:grid;gap:.3rem;min-width:220px;flex:1;">${label}
+      <input id="sec-${key}" type="number" value="${escapeHtml(res.data[key] || '')}">
+    </label>`).join('');
+}
+
+async function saveIpSecuritySettings() {
+  const values = {};
+  for (const key of Object.keys(ipSecurityFields)) values[key] = document.getElementById('sec-' + key).value;
+  const res = await putJson('/root/thresholds', { values });
+  const msg = document.getElementById('ip-security-msg');
+  msg.textContent = res.code === 0 ? '防护策略已保存并立即生效' : res.message;
+  msg.style.color = res.code === 0 ? 'green' : 'var(--danger)';
+  if (res.code === 0) loadIpSecuritySettings();
+}
+
+async function loadOperationalSettings() {
+  const res = await getJson('/root/thresholds');
+  const el = document.getElementById('operational-settings');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = Object.entries(operationalFields).map(([key, label]) => `<label>${label}<input id="op-${key}" type="number" min="0" value="${escapeHtml(res.data[key] || '0')}"></label>`).join('');
+}
+
+async function saveOperationalSettings() {
+  const values = {};
+  for (const key of Object.keys(operationalFields)) values[key] = document.getElementById('op-' + key).value;
+  const res = await putJson('/root/thresholds', { values });
+  const msg = document.getElementById('operational-settings-msg');
+  msg.textContent = res.code === 0 ? '图片与积分参数已保存' : res.message;
+  msg.style.color = res.code === 0 ? 'green' : 'var(--danger)';
+  if (res.code === 0) loadOperationalSettings();
+}
+
+async function loadIpControls(page = 1) {
+  const res = await getJson('/admin/ip-controls?page=' + page + '&limit=20');
+  const el = document.getElementById('ip-controls-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>IP</th><th>当前计数</th><th>访问上限</th><th>触发次数</th><th>封禁至</th><th>降级至</th><th>操作</th></tr></thead><tbody>' +
+    res.data.items.map(p => `<tr><td>${escapeHtml(p.ip)}</td><td>${p.request_count}</td><td>${p.limit_per_minute}</td><td>${p.strike_count}</td><td>${p.banned_until > Date.now()/1000 ? new Date(p.banned_until*1000).toLocaleString() : '-'}</td><td>${p.degraded_until > Date.now()/1000 ? new Date(p.degraded_until*1000).toLocaleString() : '-'}</td><td><button class="secondary" onclick="liftIpAddress('${escapeHtml(p.ip)}')">解除封禁</button></td></tr>`).join('') + '</tbody></table>';
+  renderPagination('ip-controls-paging', res.data.page, res.data.limit, res.data.total, loadIpControls);
+}
+
+async function banIpAddress() {
+  const ip = document.getElementById('ip-ban-address').value.trim();
+  const minutes = parseInt(document.getElementById('ip-ban-minutes').value, 10);
+  const reason = document.getElementById('ip-ban-reason').value.trim();
+  if (!ip || !minutes) { showToast('请输入有效 IP 和封禁时间', 'error'); return; }
+  const res = await postJson('/admin/ip-controls/ban', { ip, minutes, reason });
+  showToast(res.code === 0 ? `IP 已封禁 ${res.data.minutes} 分钟` : res.message, res.code === 0 ? 'success' : 'error');
+  loadIpControls(); loadIpEvents();
+}
+
+async function liftIpAddress(ip) {
+  const res = await postJson('/admin/ip-controls/' + encodeURIComponent(ip) + '/lift', {});
+  showToast(res.code === 0 ? 'IP 已解除封禁' : res.message, res.code === 0 ? 'success' : 'error');
+  loadIpControls(); loadIpEvents();
+}
+
+async function loadIpEvents(page = 1) {
+  const res = await getJson('/admin/ip-controls/events?page=' + page + '&limit=20');
+  const el = document.getElementById('ip-events-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = '<table><thead><tr><th>时间</th><th>IP</th><th>事件</th><th>路径</th><th>操作者</th><th>详情</th></tr></thead><tbody>' +
+    res.data.items.map(e => `<tr><td>${formatTime(e.created_at)}</td><td>${escapeHtml(e.ip)}</td><td>${escapeHtml(e.event_type)}</td><td>${escapeHtml(e.path || '-')}</td><td>${escapeHtml(e.actor_nickname || '系统')}</td><td>${escapeHtml(e.detail || '-')}</td></tr>`).join('') + '</tbody></table>';
+  renderPagination('ip-events-paging', res.data.page, res.data.limit, res.data.total, loadIpEvents);
+}
+
+async function banEmail() {
+  const email = document.getElementById('ban-email-input').value.trim();
+  const reason = document.getElementById('ban-email-reason').value.trim();
+  if (!email) { showToast('请输入邮箱', 'error'); return; }
+  const res = await postJson('/admin/bans/email', { email, reason });
+  showToast(res.code === 0 ? '邮箱已封禁' : res.message, res.code === 0 ? 'success' : 'error');
+  loadBans();
+}
+
+async function banDevice() {
+  const fingerprint = document.getElementById('ban-device-input').value.trim();
+  const reason = document.getElementById('ban-device-reason').value.trim();
+  if (!fingerprint) { showToast('请输入设备指纹', 'error'); return; }
+  const res = await postJson('/admin/bans/device', { fingerprint, reason });
+  showToast(res.code === 0 ? '设备已封禁' : res.message, res.code === 0 ? 'success' : 'error');
+  loadBans();
+}
+
+async function banEmailByUser(email) {
+  if (!email) return;
+  const reason = await promptDialog('封禁原因（可选）：', '', '封禁邮箱') || '';
+  const res = await postJson('/admin/bans/email', { email, reason });
+  showToast(res.code === 0 ? '邮箱已封禁' : res.message, res.code === 0 ? 'success' : 'error');
+  loadBans();
+}
+
+async function banDeviceByUser(fp) {
+  if (!fp) { showToast('该用户无设备指纹', 'error'); return; }
+  const reason = await promptDialog('封禁原因（可选）：', '', '封禁设备') || '';
+  const res = await postJson('/admin/bans/device', { fingerprint: fp, reason });
+  showToast(res.code === 0 ? '设备已封禁' : res.message, res.code === 0 ? 'success' : 'error');
+  loadBans();
+}
+
+async function liftBan(id) {
+  const res = await postJson('/admin/bans/' + id + '/lift', {});
+  showToast(res.code === 0 ? '已解除' : res.message, res.code === 0 ? 'success' : 'error');
+  loadBans();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>邮件代发 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/emails.html" data-module="emails">邮件代发</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div class="page-header">
+    <div class="page-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+    </div>
+    <div>
+      <h1>邮件代发</h1>
+      <div class="page-subtitle">标准化邮件模板，平台统一代发保护你的身份</div>
+    </div>
+  </div>
+  <div class="card">
+    <p class="muted">你只需填写表单，系统会自动生成标准化邮件。发送前必须预览全文并二次确认。平台统一邮箱代发，不会暴露你的身份。</p>
+  </div>
+  <div class="card">
+    <h2>填写表单</h2>
+    <form id="email-form">
+      <div class="form-row">
+        <input list="platforms" id="platform_name" placeholder="目标平台名称" required>
+        <datalist id="platforms"></datalist>
+        <select id="issue_type" required>
+          <option value="">问题类型</option>
+          <option>隐私条款不合理</option>
+          <option>霸王条款</option>
+          <option>数据滥用</option>
+          <option>未成年人保护缺失</option>
+          <option>其他</option>
+        </select>
+      </div>
+      <input id="recipient" placeholder="收件人邮箱（如 platform@example.com）" required>
+      <textarea id="description" placeholder="问题描述（大白话描述你遇到的情况）" required></textarea>
+      <input id="law_reference" placeholder="涉及的法律条款（可选，系统可建议）">
+      <textarea id="clause_text" placeholder="条款原文（可选）"></textarea>
+      <input type="file" id="images" accept=".jpg,.jpeg,.png,.webp" multiple>
+      <div class="upload-quality-row">
+        <label for="image_target_bytes">附件保存质量</label>
+        <select id="image_target_bytes"><option value="auto">自动压缩</option></select>
+        <span id="image-policy-hint" class="muted">登录后读取积分权限</span>
+      </div>
+      <p id="image-selection-summary" class="muted"></p>
+      <p class="muted">附件默认自动压缩并清除图片元数据；高积分用户可选择更高体积或原图，但仍受单图与每日容量上限约束。</p>
+      <input id="sender_name" placeholder="署名（可匿名，将显示在邮件末尾）">
+      <div class="form-row">
+        <label class="radio-row">
+          <input type="radio" name="send_method" value="proxy" checked> 平台统一邮箱代发
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="send_method" value="self"> 自行发送（仅生成可复制模板）
+        </label>
+      </div>
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">生成邮件并预览</button>
+      </div>
+      <p id="form-msg" class="muted"></p>
+    </form>
+  </div>
+  <div class="card hidden" id="preview-card">
+    <h2>邮件全文预览</h2>
+    <div class="content-block">
+      <p><strong>收件人：</strong><span id="preview-recipient"></span></p>
+      <p><strong>主题：</strong><span id="preview-subject"></span></p>
+      <hr class="divider">
+      <pre id="preview-body" class="email-preview-body"></pre>
+    </div>
+    <p id="send-hint" class="muted"></p>
+    <div class="btn-group">
+      <button id="confirm-send" class="btn btn-primary">确认发送</button>
+      <button id="cancel-preview" class="btn btn-secondary">取消</button>
+    </div>
+    <p id="send-msg" class="muted"></p>
+  </div>
+  <div class="card">
+    <h2>我的邮件</h2>
+    <div id="my-emails">加载中...</div>
+    <div id="emails-paging" class="pagination"></div>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+let currentEmailId = null;
+
+async function loadPlatforms() {
+  const res = await getJson('/tasks/meta/platforms');
+  if (res.code === 0) {
+    document.getElementById('platforms').innerHTML = res.data.all.map(p => `<option value="${escapeHtml(p)}">`).join('');
+  }
+}
+
+async function loadMyEmails(page = 1) {
+  const res = await getJson('/emails/my?page=' + page + '&limit=10');
+  const el = document.getElementById('my-emails');
+  if (res.code !== 0) { el.innerHTML = '<div class="muted">' + escapeHtml(res.message) + '</div>'; return; }
+  const items = res.data.items || [];
+  if (!items.length) { el.innerHTML = '<div class="muted">暂无邮件记录</div>'; return; }
+  el.innerHTML = '<div class="table-scroll"><table><thead><tr><th>平台</th><th>收件人</th><th>方式</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody>' +
+    items.map(e => `<tr>
+      <td>${escapeHtml(e.platform_name)}</td>
+      <td>${escapeHtml(e.recipient)}</td>
+      <td>${e.send_method === 'proxy' ? '平台代发' : '自行发送'}</td>
+      <td><span class="badge badge-muted">${escapeHtml(e.status)}</span></td>
+      <td>${formatTime(e.created_at)}</td>
+      <td>${e.status === 'draft' || e.status === 'failed' ? `<button class="btn btn-primary btn-sm" onclick="previewEmail(${e.id})">预览/发送</button>` : `<button class="btn btn-secondary btn-sm" onclick="previewEmail(${e.id})">查看</button>`}</td>
+    </tr>`).join('') + '</tbody></table></div>';
+  renderPagination('emails-paging', res.data.page, res.data.limit, res.data.total, loadMyEmails);
+}
+
+function getSendMethod() {
+  const radios = document.getElementsByName('send_method');
+  for (const r of radios) if (r.checked) return r.value;
+  return 'proxy';
+}
+
+document.getElementById('email-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData();
+  fd.append('platform_name', document.getElementById('platform_name').value);
+  fd.append('issue_type', document.getElementById('issue_type').value);
+  fd.append('recipient', document.getElementById('recipient').value);
+  fd.append('description', document.getElementById('description').value);
+  fd.append('law_reference', document.getElementById('law_reference').value);
+  fd.append('clause_text', document.getElementById('clause_text').value);
+  fd.append('sender_name', document.getElementById('sender_name').value);
+  fd.append('send_method', getSendMethod());
+  fd.append('image_target_bytes', document.getElementById('image_target_bytes').value);
+  const files = document.getElementById('images').files;
+  for (let f of files) fd.append('images', f);
+  const res = await postForm('/emails', fd);
+  if (res.code === 0) {
+    showToast('邮件已生成，请在下方预览并确认', 'success');
+    previewEmail(res.data.id);
+    document.getElementById('email-form').reset();
+  } else {
+    showToast(res.message, 'error');
+  }
+});
+
+function formatBytes(n) { if (n < 1024) return n + ' B'; if (n < 1048576) return (n/1024).toFixed(0) + ' KB'; return (n/1048576).toFixed(1) + ' MB'; }
+async function loadImagePolicy() {
+  const res = await getJson('/tasks/meta/image-policy');
+  if (res.code !== 0) return;
+  const p = res.data, select = document.getElementById('image_target_bytes');
+  select.innerHTML = `<option value="auto">自动压缩（约 ${formatBytes(p.default_target_bytes)}/张）</option>`;
+  if (p.can_choose) p.presets.forEach(size => select.insertAdjacentHTML('beforeend', `<option value="${size}">压缩至约 ${formatBytes(size)}/张</option>`));
+  if (p.can_original) select.insertAdjacentHTML('beforeend', `<option value="original">保留原图（最多 ${formatBytes(p.original_max_bytes)}）</option>`);
+  document.getElementById('image-policy-hint').textContent = p.can_original ? '已解锁原图' : p.can_choose ? `已解锁体积选择；${p.original_points} 积分解锁原图` : `${p.choice_points} 积分解锁体积选择，${p.original_points} 积分解锁原图`;
+}
+document.getElementById('images').addEventListener('change', e => {
+  const files = [...e.target.files], total = files.reduce((sum, file) => sum + file.size, 0);
+  document.getElementById('image-selection-summary').textContent = files.length ? `已选 ${files.length} 张，原始体积 ${formatBytes(total)}` : '';
+});
+
+async function previewEmail(id) {
+  const res = await getJson('/emails/' + id);
+  if (res.code !== 0) { showToast(res.message, 'error'); return; }
+  const e = res.data;
+  currentEmailId = e.id;
+  document.getElementById('preview-card').classList.remove('hidden');
+  document.getElementById('preview-recipient').textContent = e.recipient;
+  document.getElementById('preview-subject').textContent = e.subject;
+  document.getElementById('preview-body').textContent = e.body;
+  const btn = document.getElementById('confirm-send');
+  if (e.send_method === 'proxy') {
+    btn.textContent = e.status === 'sent' ? '已发送' : '确认发送';
+    document.getElementById('send-hint').textContent = e.status === 'sent' ? '该邮件已通过平台统一邮箱发送。' : '点击"确认发送"后，系统将使用平台统一邮箱发送此邮件。';
+  } else {
+    btn.textContent = '复制模板与收件人';
+    document.getElementById('send-hint').textContent = '请复制下方邮件内容，使用你自己的邮箱发送给收件人。';
+  }
+  btn.disabled = e.status === 'sent' || e.status === 'self_sent';
+  document.getElementById('send-msg').textContent = '';
+}
+
+document.getElementById('confirm-send').addEventListener('click', async () => {
+  if (!currentEmailId) return;
+  const res = await postJson('/emails/' + currentEmailId + '/send', {});
+  if (res.code === 0) {
+    showToast(res.message, 'success');
+    document.getElementById('confirm-send').disabled = true;
+    loadMyEmails();
+  } else {
+    showToast(res.message, 'error');
+  }
+});
+
+document.getElementById('cancel-preview').addEventListener('click', () => {
+  document.getElementById('preview-card').classList.add('hidden');
+  currentEmailId = null;
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadPlatforms();
+  loadImagePolicy();
+  loadMyEmails();
+});
+</script>
+</body>
+</html>

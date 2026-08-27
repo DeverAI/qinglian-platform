@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帖子详情 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/emails.html" data-module="emails">邮件代发</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div class="card" id="post-card">加载中...</div>
+  <div class="card hidden" id="reply-form-card">
+    <h3>回复</h3>
+    <div id="quote-preview" class="quote-preview hidden"></div>
+    <textarea id="reply-content" placeholder="发表你的看法..."></textarea>
+    <div class="btn-group">
+      <button id="submit-reply" class="btn btn-primary">提交回复</button>
+    </div>
+    <p id="reply-msg"></p>
+  </div>
+  <div class="card">
+    <h3>回复列表</h3>
+    <div id="replies" class="list-stack">加载中...</div>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+let postId = parseInt(qs('id') || '0');
+let currentPost = null;
+let quoteReplyId = null;
+
+async function loadPost() {
+  if (!postId) { location.href = '/forum.html'; return; }
+  const res = await getJson('/forum/posts/' + postId);
+  const el = document.getElementById('post-card');
+  if (res.code !== 0) { el.innerHTML = `<p class="muted">${escapeHtml(res.message)}</p><div class="btn-group"><a href="/forum.html" class="btn btn-secondary">返回论坛</a></div>`; return; }
+  const p = res.data;
+  currentPost = p;
+  const tags = p.tags.map(t => `<a class="tag" href="/forum.html?tag=${encodeURIComponent(t)}">${escapeHtml(t)}</a>`).join('');
+  const user = getUser();
+  let actions = '';
+  if (user && user.id !== p.user.id) {
+    actions += `<button id="like-post" class="btn btn-secondary ${p.my_like === 1 ? 'active' : ''}">赞 ${p.likes}</button> `;
+    actions += `<button id="dislike-post" class="btn btn-secondary ${p.my_like === -1 ? 'active' : ''}">踩 ${p.dislikes}</button> `;
+    actions += `<button id="fav-post" class="btn btn-secondary">${p.is_favorite ? '已收藏' : '收藏'}</button> `;
+    actions += `<button id="report-post" class="btn btn-secondary">举报</button>`;
+  } else {
+    actions += `<span class="muted">赞 ${p.likes} · 踩 ${p.dislikes}</span>`;
+  }
+  el.innerHTML = `
+    <h1>${p.is_essence ? '<span class="badge">精</span> ' : ''}${escapeHtml(p.title)}</h1>
+    <div class="muted">by ${escapeHtml(p.user.nickname)}${p.user.role !== 'user' ? ' <span class="badge">' + escapeHtml(p.user.role) + '</span>' : ''} · 浏览 ${p.views} · ${formatTime(p.created_at)}</div>
+    <div class="tag-row">${tags}</div>
+    <div class="content-block">${renderMarkdown(p.content)}</div>
+    <div class="btn-group">${actions}</div>
+  `;
+  bindPostActions(p);
+  renderReplies(p.replies);
+  if (user) document.getElementById('reply-form-card').classList.remove('hidden');
+}
+
+function bindPostActions(p) {
+  const user = getUser();
+  if (!user || user.id === p.user.id) return;
+  document.getElementById('like-post')?.addEventListener('click', async () => {
+    const res = await postJson('/forum/posts/' + postId + '/like', { value: 1 });
+    if (res.code === 0) loadPost(); else showToast(res.message, 'error');
+  });
+  document.getElementById('dislike-post')?.addEventListener('click', async () => {
+    const res = await postJson('/forum/posts/' + postId + '/like', { value: -1 });
+    if (res.code === 0) loadPost(); else showToast(res.message, 'error');
+  });
+  document.getElementById('fav-post')?.addEventListener('click', async () => {
+    const res = await postJson('/forum/posts/' + postId + '/favorite', {});
+    if (res.code === 0) loadPost(); else showToast(res.message, 'error');
+  });
+  document.getElementById('report-post')?.addEventListener('click', async () => {
+    const reason = await promptDialog('请输入举报原因：', '', '举报帖子');
+    if (!reason) return;
+    const res = await postJson('/forum/reports', { target_type: 'post', target_id: postId, reason });
+    showToast(res.code === 0 ? '举报已提交' : res.message, res.code === 0 ? 'success' : 'error');
+  });
+}
+
+function renderReplies(list) {
+  const el = document.getElementById('replies');
+  if (!list.length) { el.innerHTML = '<div class="muted">暂无回复</div>'; return; }
+  const user = getUser();
+  el.innerHTML = list.map(r => {
+    let quote = '';
+    if (r.quote) quote = `<div class="quote-preview">${escapeHtml(r.quote.user.nickname)}：${escapeHtml(r.quote.content)}</div>`;
+    let actions = `<span class="muted">赞 ${r.likes} · 踩 ${r.dislikes}</span>`;
+    if (user && user.id !== r.user.id) {
+      actions = `<button class="btn btn-secondary reply-like ${r.my_like === 1 ? 'active' : ''}" data-id="${r.id}" data-value="1">赞 ${r.likes}</button>
+        <button class="btn btn-secondary reply-like ${r.my_like === -1 ? 'active' : ''}" data-id="${r.id}" data-value="-1">踩 ${r.dislikes}</button>
+        <button class="btn btn-secondary reply-quote" data-id="${r.id}" data-nick="${escapeHtml(r.user.nickname)}">引用</button>
+        <button class="btn btn-secondary reply-report" data-id="${r.id}">举报</button>`;
+    }
+    return `<div class="reply-item">
+      <div class="muted">${escapeHtml(r.user.nickname)} · ${formatTime(r.created_at)}</div>
+      ${quote}
+      <div class="content-block">${renderMarkdown(r.content)}</div>
+      <div class="btn-group">${actions}</div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.reply-like').forEach(b => {
+    b.addEventListener('click', async () => {
+      const res = await postJson('/forum/replies/' + b.dataset.id + '/like', { value: parseInt(b.dataset.value) });
+      if (res.code === 0) loadPost(); else showToast(res.message, 'error');
+    });
+  });
+  el.querySelectorAll('.reply-quote').forEach(b => {
+    b.addEventListener('click', () => {
+      quoteReplyId = parseInt(b.dataset.id);
+      const preview = document.getElementById('quote-preview');
+      preview.innerHTML = `引用 ${escapeHtml(b.dataset.nick)} <button class="btn btn-secondary quote-clear" type="button">取消</button>`;
+      preview.classList.remove('hidden');
+      preview.querySelector('.quote-clear').addEventListener('click', clearQuote);
+    });
+  });
+  el.querySelectorAll('.reply-report').forEach(b => {
+    b.addEventListener('click', async () => {
+      const reason = await promptDialog('请输入举报原因：', '', '举报回复');
+      if (!reason) return;
+      const res = await postJson('/forum/reports', { target_type: 'reply', target_id: parseInt(b.dataset.id), reason });
+      showToast(res.code === 0 ? '举报已提交' : res.message, res.code === 0 ? 'success' : 'error');
+    });
+  });
+}
+
+function clearQuote() {
+  quoteReplyId = null;
+  const preview = document.getElementById('quote-preview');
+  preview.classList.add('hidden');
+  preview.innerHTML = '';
+}
+
+document.getElementById('submit-reply').addEventListener('click', async () => {
+  const content = document.getElementById('reply-content').value;
+  if (!content.trim()) return;
+  const body = { content, quote_reply_id: quoteReplyId };
+  const res = await postJson('/forum/posts/' + postId + '/replies', body);
+  if (res.code === 0) {
+    showToast('回复成功', 'success');
+    document.getElementById('reply-content').value = '';
+    clearQuote();
+    loadPost();
+  } else {
+    showToast(res.message, 'error');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', loadPost);
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>举报任务 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/emails.html" data-module="emails">邮件代发</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div id="detail-view" class="card hidden">
+    <div class="page-header">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>任务详情</h1>
+        <div class="page-subtitle">查看举报记录与审核进度</div>
+      </div>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+  <div id="list-view">
+    <div class="page-header">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+          <line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+      </div>
+      <div>
+        <h1>举报任务</h1>
+        <div class="page-subtitle">提交你发现的不合理条款与平台问题</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>提交举报</h2>
+      <form id="task-form">
+        <div class="form-row">
+          <input list="platforms" id="platform_name" placeholder="平台名称" required>
+          <datalist id="platforms"></datalist>
+          <select id="issue_type" required>
+            <option value="">问题类型</option>
+            <option>隐私条款不合理</option>
+            <option>霸王条款</option>
+            <option>数据滥用</option>
+            <option>未成年人保护缺失</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <textarea id="clause_text" placeholder="条款原文" required></textarea>
+        <textarea id="description" placeholder="不合理性说明" required></textarea>
+        <input id="law_reference" placeholder="法律依据引用（可选）">
+        <input type="file" id="images" accept=".jpg,.jpeg,.png,.webp" multiple>
+        <div class="upload-quality-row">
+          <label for="image_target_bytes">保存质量</label>
+          <select id="image_target_bytes"><option value="auto">自动压缩</option></select>
+          <span id="image-policy-hint" class="muted">登录后读取积分权限与容量上限</span>
+        </div>
+        <p id="image-selection-summary" class="muted"></p>
+        <p class="muted">图片会在服务端安全解码、去除元数据并自动压缩；达到积分门槛后可选择更高体积或原图。无论积分多少，仍受 Root 设置的单图、像素、数量和每日总量上限约束。上传前请检查第三方个人信息并自行备份。</p>
+        <label class="checkbox-row">
+          <input type="checkbox" id="no_sensitive_declared">
+          <span>我已确认上传的截图中不包含第三方真实姓名、手机号、人脸、家庭住址等个人信息，并已自行备份原始图片。</span>
+        </label>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">提交</button>
+        </div>
+        <p id="submit-msg"></p>
+      </form>
+    </div>
+    <div class="card">
+      <h2>我的任务</h2>
+      <div id="my-tasks" class="list-stack">请先登录。</div>
+    </div>
+    <div class="card">
+      <h2>公开举报档案</h2>
+      <div id="public-tasks" class="list-stack">加载中...</div>
+    </div>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+async function loadPlatforms() {
+  const res = await getJson('/tasks/meta/platforms');
+  if (res.code === 0) {
+    document.getElementById('platforms').innerHTML = res.data.all.map(p => `<option value="${escapeHtml(p)}">`).join('');
+  }
+}
+async function loadPublic() {
+  const res = await getJson('/tasks?limit=20');
+  const el = document.getElementById('public-tasks');
+  if (res.code === 0) {
+    el.innerHTML = res.data.items.map(t =>
+      `<div class="list-item"><a href="/tasks.html?id=${t.id}" class="list-title">${escapeHtml(t.platform_name)} · ${escapeHtml(t.issue_type)}</a><span class="badge badge-muted">${escapeHtml(t.status)}</span></div>`
+    ).join('') || '<div class="muted">暂无</div>';
+  }
+}
+async function loadMy() {
+  const res = await getJson('/tasks/my?limit=20');
+  const el = document.getElementById('my-tasks');
+  if (res.code === 0) {
+    el.innerHTML = res.data.items.map(t =>
+      `<div class="list-item"><a href="/tasks.html?id=${t.id}" class="list-title">${escapeHtml(t.platform_name)} · ${escapeHtml(t.issue_type)}</a><span class="badge badge-muted">${escapeHtml(t.status)}</span></div>`
+    ).join('') || '<div class="muted">暂无</div>';
+  } else {
+    el.textContent = '请先登录。';
+  }
+}
+async function showDetail(id) {
+  document.getElementById('list-view').classList.add('hidden');
+  document.getElementById('detail-view').classList.remove('hidden');
+  const res = await getJson('/tasks/' + id);
+  const el = document.getElementById('detail-content');
+  if (res.code !== 0) { el.innerHTML = '<p class="muted">' + escapeHtml(res.message) + '</p>'; return; }
+  const t = res.data;
+  let html = `<div class="detail-grid">`;
+  html += `<div class="detail-row"><span class="detail-label">平台</span><span class="detail-value">${escapeHtml(t.platform_name)}</span></div>`;
+  html += `<div class="detail-row"><span class="detail-label">类型</span><span class="detail-value">${escapeHtml(t.issue_type)}</span></div>`;
+  html += `<div class="detail-row"><span class="detail-label">状态</span><span class="detail-value"><span class="badge">${escapeHtml(t.status)}</span></span></div>`;
+  html += `</div>`;
+  html += `<h3>条款原文</h3><div class="content-block">${renderMarkdown(t.clause_text)}</div>`;
+  html += `<h3>说明</h3><div class="content-block">${renderMarkdown(t.description)}</div>`;
+  if (t.law_reference) html += `<p><strong>法律依据：</strong>${escapeHtml(t.law_reference)}</p>`;
+  if (t.images.length) html += `<h3>截图</h3><div class="image-grid">${t.images.map(i => `<img src="/uploads/${escapeHtml(i)}" class="upload-image">`).join('')}</div>`;
+  html += `<div class="btn-group"><a href="/tasks.html" class="btn btn-secondary">返回列表</a></div>`;
+  el.innerHTML = html;
+}
+document.getElementById('task-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData();
+  fd.append('platform_name', document.getElementById('platform_name').value);
+  fd.append('issue_type', document.getElementById('issue_type').value);
+  fd.append('clause_text', document.getElementById('clause_text').value);
+  fd.append('description', document.getElementById('description').value);
+  fd.append('law_reference', document.getElementById('law_reference').value);
+  fd.append('image_target_bytes', document.getElementById('image_target_bytes').value);
+  if (document.getElementById('no_sensitive_declared').checked) fd.append('no_sensitive_declared', 'on');
+  const files = document.getElementById('images').files;
+  for (let f of files) fd.append('images', f);
+  const res = await postForm('/tasks', fd);
+  const msg = document.getElementById('submit-msg');
+  if (res.code === 0) {
+    const summary = res.data.upload_summary;
+    showToast(summary && summary.source_bytes ? `提交成功，图片由 ${formatBytes(summary.source_bytes)} 压缩为 ${formatBytes(summary.stored_bytes)}` : '提交成功，等待审核', 'success');
+    document.getElementById('task-form').reset();
+    loadMy();
+  } else {
+    showToast(res.message, 'error');
+  }
+});
+function formatBytes(n) { if (n < 1024) return n + ' B'; if (n < 1048576) return (n/1024).toFixed(0) + ' KB'; return (n/1048576).toFixed(1) + ' MB'; }
+async function loadImagePolicy() {
+  const res = await getJson('/tasks/meta/image-policy');
+  if (res.code !== 0) return;
+  const p = res.data, select = document.getElementById('image_target_bytes');
+  select.innerHTML = `<option value="auto">自动压缩（约 ${formatBytes(p.default_target_bytes)}/张）</option>`;
+  if (p.can_choose) p.presets.forEach(size => select.insertAdjacentHTML('beforeend', `<option value="${size}">压缩至约 ${formatBytes(size)}/张</option>`));
+  if (p.can_original) select.insertAdjacentHTML('beforeend', `<option value="original">保留原图（单张最多 ${formatBytes(p.original_max_bytes)}）</option>`);
+  document.getElementById('image-policy-hint').textContent = p.can_original ? '已解锁原图' : p.can_choose ? `已解锁体积选择；${p.original_points} 积分解锁原图` : `${p.choice_points} 积分解锁体积选择，${p.original_points} 积分解锁原图`;
+}
+document.getElementById('images').addEventListener('change', e => {
+  const files = [...e.target.files], total = files.reduce((sum, file) => sum + file.size, 0);
+  document.getElementById('image-selection-summary').textContent = files.length ? `已选 ${files.length} 张，原始体积 ${formatBytes(total)}；实际保存体积以服务端处理结果为准。` : '';
+});
+document.addEventListener('DOMContentLoaded', () => {
+  loadPlatforms();
+  loadImagePolicy();
+  const id = qs('id');
+  if (id) showDetail(id);
+  else { loadMy(); loadPublic(); }
+});
+</script>
+</body>
+</html>

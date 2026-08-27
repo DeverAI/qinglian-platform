@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>论坛 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container">
+  <div class="card">
+    <h1>论坛</h1>
+    <div id="categories">加载中...</div>
+    <div id="subscribeBar" style="margin-top:.75rem;display:none;">
+      <button class="btn btn-primary" id="subscribeBtn" onclick="toggleSubscribe()">关注该板块</button>
+      <span class="muted" id="subscribeHint" style="margin-left:.6rem;"></span>
+    </div>
+  </div>
+  <div class="card" id="post-form-card" style="display:none;">
+    <h2>发布帖子</h2>
+    <form id="post-form">
+      <select id="category_id" required></select>
+      <input id="title" placeholder="标题" required maxlength="120">
+      <textarea id="content" placeholder="正文（支持 Markdown，可用 #标签）" required></textarea>
+      <input id="tags" placeholder="标签，用空格分隔（可选）">
+      <button type="submit">发布</button>
+      <p id="post-msg"></p>
+    </form>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <span class="tab active" data-filter="all">全部</span>
+      <span class="tab" data-filter="essence">精华</span>
+    </div>
+    <div id="post-list">加载中...</div>
+    <div id="post-paging" class="pagination"></div>
+  </div>
+  <div class="card">
+    <h2>热门标签</h2>
+    <div id="tag-cloud">加载中...</div>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+let currentFilter = 'all';
+let currentCategory = 0;
+
+function buildCategoryOptions(list, prefix = '') {
+  let html = '';
+  for (const c of list) {
+    html += `<option value="${c.id}">${prefix}${escapeHtml(c.name)}</option>`;
+    if (c.children && c.children.length) html += buildCategoryOptions(c.children, prefix + '　');
+  }
+  return html;
+}
+
+function renderCategoryTree(list) {
+  let html = '<ul>';
+  for (const c of list) {
+    html += `<li><a href="/forum.html?category_id=${c.id}">${escapeHtml(c.name)}</a>`;
+    if (c.children && c.children.length) html += renderCategoryTree(c.children);
+    html += '</li>';
+  }
+  html += '</ul>';
+  return html;
+}
+
+async function loadCategories() {
+  const res = await getJson('/forum/categories');
+  if (res.code === 0) {
+    document.getElementById('categories').innerHTML = renderCategoryTree(res.data);
+    document.getElementById('category_id').innerHTML = buildCategoryOptions(res.data);
+  }
+}
+
+async function loadPosts(page = 1) {
+  const url = `/forum/posts?page=${page}&limit=20&category_id=${currentCategory}&essence=${currentFilter === 'essence'}`;
+  const res = await getJson(url);
+  const el = document.getElementById('post-list');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  const items = res.data.items;
+  el.innerHTML = items.map(p => {
+    const tags = p.tags.map(t => `<a class="tag" href="/forum.html?tag=${encodeURIComponent(t)}">${escapeHtml(t)}</a>`).join('');
+    return `<div style="margin-bottom:.75rem;border-bottom:1px solid var(--border);padding-bottom:.5rem;">
+      <a href="/post.html?id=${p.id}" style="font-size:1.1rem;font-weight:600;">${p.is_essence ? '[精] ' : ''}${escapeHtml(p.title)}</a>
+      <div class="muted">by ${escapeHtml(p.user.nickname)} · 浏览 ${p.views} · 赞 ${p.likes} · ${formatTime(p.created_at)}</div>
+      <div style="margin-top:.25rem;">${tags}</div>
+    </div>`;
+  }).join('') || '暂无帖子';
+  renderPagination('post-paging', res.data.page, res.data.limit, res.data.total, loadPosts);
+}
+
+async function loadTags() {
+  const res = await getJson('/forum/tags');
+  const el = document.getElementById('tag-cloud');
+  if (res.code === 0) {
+    el.innerHTML = res.data.map(t => `<a class="tag" href="/forum.html?tag=${encodeURIComponent(t.name)}">${escapeHtml(t.name)} (${t.post_count})</a>`).join('') || '暂无';
+  }
+}
+
+document.getElementById('post-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    category_id: parseInt(document.getElementById('category_id').value),
+    title: document.getElementById('title').value,
+    content: document.getElementById('content').value,
+    tags: document.getElementById('tags').value.split(/\s+/).filter(Boolean),
+  };
+  const res = await postJson('/forum/posts', body);
+  const msg = document.getElementById('post-msg');
+  if (res.code === 0) {
+    msg.textContent = '发布成功';
+    msg.style.color = 'green';
+    document.getElementById('post-form').reset();
+    loadPosts();
+  } else {
+    msg.textContent = res.message;
+    msg.style.color = 'var(--danger)';
+  }
+});
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentFilter = t.dataset.filter;
+    loadPosts();
+  });
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadCategories();
+  const user = getUser();
+  if (user) document.getElementById('post-form-card').style.display = 'block';
+  const params = new URLSearchParams(location.search);
+  currentCategory = parseInt(params.get('category_id') || '0') || 0;
+  const tag = params.get('tag');
+  if (tag) {
+    document.getElementById('post-list').innerHTML = `标签 #${escapeHtml(tag)} 的帖子`;
+    const res = await getJson('/forum/tags/' + encodeURIComponent(tag) + '/posts');
+    const el = document.getElementById('post-list');
+    if (res.code === 0) {
+      el.innerHTML = res.data.items.map(p =>
+        `<div><a href="/post.html?id=${p.id}">${p.is_essence ? '[精] ' : ''}${escapeHtml(p.title)}</a> <span class="muted">by ${escapeHtml(p.user.nickname)}</span></div>`
+      ).join('') || '暂无';
+    }
+    document.getElementById('post-paging').innerHTML = '';
+  } else {
+    loadPosts();
+  }
+  loadTags();
+  // 关注状态：仅在选中具体板块且已登录时展示
+  if (user && currentCategory > 0) {
+    refreshSubscribeBar();
+  }
+
+  // 移动端导航折叠
+});
+
+let _subscribedIds = new Set();
+
+async function refreshSubscribeBar() {
+  const bar = document.getElementById('subscribeBar');
+  const btn = document.getElementById('subscribeBtn');
+  const hint = document.getElementById('subscribeHint');
+  if (!bar) return;
+  // 拉取我的关注列表
+  const r = await getJson('/forum/my/subscriptions');
+  if (r.code === 0) {
+    _subscribedIds = new Set((r.data.items || []).map(i => i.id));
+  }
+  if (_subscribedIds.has(currentCategory)) {
+    btn.textContent = '取消关注';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('secondary');
+    hint.textContent = '已关注：该板块新帖将出现在首页消息流';
+  } else {
+    btn.textContent = '关注该板块';
+    btn.classList.add('btn-primary');
+    btn.classList.remove('secondary');
+    hint.textContent = '关注后，该板块新帖将出现在首页"关注板块" Tab';
+  }
+  bar.style.display = 'block';
+}
+
+async function toggleSubscribe() {
+  if (!getToken()) { location.href = '/login.html'; return; }
+  const isSub = _subscribedIds.has(currentCategory);
+  let r;
+  if (isSub) {
+    r = await deleteJson('/forum/categories/' + currentCategory + '/subscribe');
+  } else {
+    r = await postJson('/forum/categories/' + currentCategory + '/subscribe', {});
+  }
+  if (r.code === 0) {
+    if (isSub) _subscribedIds.delete(currentCategory);
+    else _subscribedIds.add(currentCategory);
+    refreshSubscribeBar();
+  } else {
+    showToast(r.message || '操作失败', 'error');
+  }
+}
+</script>
+</body>
+</html>

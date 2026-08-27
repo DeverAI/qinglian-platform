@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人主页 - 青联合规监督社区</title>
+<link rel="stylesheet" href="/static/common.css">
+</head>
+<body>
+<header>
+  <nav id="mainNav">
+    <a href="/" class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1e3a8a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#navLogoGrad)" d="M32 4 L56 14 V32 C56 46 46 56 32 60 C18 56 8 46 8 32 V14 Z"/>
+        <circle cx="32" cy="26" r="5" fill="#fff"/>
+        <circle cx="20" cy="40" r="2.6" fill="#fff"/>
+        <circle cx="44" cy="40" r="2.6" fill="#fff"/>
+        <path d="M32 31 L20 40 L32 46 L44 40 Z" fill="none" stroke="#fff" stroke-width="2"/>
+      </svg>
+      <span>青联合规监督社区</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="菜单">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">首页</a>
+      <a href="/tasks.html" data-module="tasks">任务</a>
+      <a href="/forum.html" data-module="forum">论坛</a>
+      <a href="/knowledge.html" data-module="knowledge">知识库</a>
+      <a href="/quiz.html">条文背诵</a>
+      <a href="/emails.html" data-module="emails">邮件代发</a>
+      <a href="/rankings.html" data-module="points">排行榜</a>
+      <a href="/agent.html" data-module="ai_agent">AI导游</a>
+      <a href="/disclaimer.html">免责声明</a>
+      <span id="nav-user"></span>
+    </div>
+  </nav>
+</header>
+<div class="container anim-in">
+  <div class="page-header">
+    <div class="page-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+    <div>
+      <h1 id="nickname">加载中...</h1>
+      <div class="page-subtitle" id="user-meta"></div>
+    </div>
+    <div class="page-actions">
+      <button id="sign-in" class="btn btn-primary">每日签到</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>积分概览</h2>
+    <div id="points-overview" class="stat-grid">加载中...</div>
+  </div>
+  <div class="card">
+    <h2>积分用途</h2>
+    <div id="points-uses">
+      <div class="list-item">
+        <div class="item-body">
+          <div class="item-title">兑换昵称颜色（荣誉）</div>
+          <div class="item-meta">消耗 50 积分，更改昵称颜色。积分不可兑换现金/实物，不具任何货币价值。</div>
+          <div id="color-options" class="color-options"></div>
+        </div>
+        <p id="color-msg" class="muted"></p>
+      </div>
+      <div class="list-item">
+        <div class="item-body">
+          <div class="item-title">申请成为内容审核志愿者</div>
+          <div class="item-meta">消耗 100 积分。通过后将获得 moderator 权限，可处理举报与帖子加精。</div>
+        </div>
+        <div class="item-actions"><button id="apply-volunteer" class="btn btn-secondary">申请志愿者</button></div>
+      </div>
+      <p id="volunteer-msg" class="muted"></p>
+      <div class="list-item">
+        <div class="item-body">
+          <div class="item-title">申请管理员权限</div>
+          <div class="item-meta">消耗 500 积分。通过后将获得 admin 权限，可审核任务、管理知识库、配置邮件与 AI API。</div>
+        </div>
+        <div class="item-actions"><button id="apply-admin" class="btn btn-secondary">申请管理员</button></div>
+      </div>
+      <p id="admin-msg" class="muted"></p>
+    </div>
+  </div>
+  <div class="card">
+    <h2>我的申请记录</h2>
+    <div id="my-applications">加载中...</div>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <span class="tab active" data-tab="logs">积分流水</span>
+      <span class="tab" data-tab="tasks">我的任务</span>
+      <span class="tab" data-tab="posts">我的帖子</span>
+    </div>
+    <div id="tab-content">加载中...</div>
+    <div id="tab-paging" class="pagination"></div>
+  </div>
+</div>
+<script src="/static/common.js"></script>
+<script>
+let currentTab = 'logs';
+
+async function init() {
+  const ok = await requireAuth();
+  if (!ok) return;
+  const me = await getJson('/auth/me');
+  if (me.code === 0) {
+    setUser(me.data);
+    const color = me.data.nickname_color || '';
+    document.getElementById('nickname').textContent = me.data.nickname;
+    document.getElementById('nickname').style.color = color || 'inherit';
+    document.getElementById('user-meta').innerHTML = `邮箱：${escapeHtml(me.data.email)} · 角色：${escapeHtml(me.data.role)} · 注册时间：${formatTime(me.data.created_at)}`;
+  }
+  loadPoints();
+  loadColorOptions();
+  loadApplications();
+  loadTab();
+}
+
+async function loadPoints() {
+  const res = await getJson('/points/me');
+  const el = document.getElementById('points-overview');
+  if (res.code !== 0) { el.innerHTML = '<div class="muted">加载失败</div>'; return; }
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${res.data.total}</div><div class="stat-label">总积分</div></div>
+    <div class="stat-card"><div class="stat-value">${res.data.signed_today ? '是' : '否'}</div><div class="stat-label">今日签到</div></div>
+    <div class="stat-card"><div class="stat-value">${res.data.week}</div><div class="stat-label">近7天</div></div>
+    <div class="stat-card"><div class="stat-value">${res.data.month}</div><div class="stat-label">近30天</div></div>
+  `;
+}
+
+async function loadColorOptions() {
+  const res = await getJson('/points/nickname-color/options');
+  const el = document.getElementById('color-options');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = res.data.colors.map(c =>
+    `<button class="color-swatch" style="background:${escapeHtml(c)}" onclick="setColor('${escapeHtml(c)}')" title="${escapeHtml(c)}" aria-label="设置昵称颜色 ${escapeHtml(c)}"></button>`
+  ).join('');
+}
+
+async function setColor(color) {
+  const res = await postJson('/points/nickname-color', { color });
+  const msg = document.getElementById('color-msg');
+  if (res.code === 0) {
+    showToast(`昵称颜色已更新，当前积分 ${res.data.points}`, 'success');
+    document.getElementById('nickname').style.color = color;
+    loadPoints();
+  } else {
+    showToast(res.message, 'error');
+  }
+}
+
+async function loadApplications() {
+  const res = await getJson('/points/applications/my');
+  const el = document.getElementById('my-applications');
+  if (res.code !== 0) { el.textContent = res.message; return; }
+  el.innerHTML = res.data.items.length
+    ? '<div class="table-scroll"><table><thead><tr><th>类型</th><th>原因</th><th>状态</th><th>时间</th></tr></thead><tbody>' +
+      res.data.items.map(a => `<tr>
+        <td>${a.type === 'volunteer' ? '志愿者' : '管理员'}</td>
+        <td>${escapeHtml(a.reason || '-')}</td>
+        <td><span class="badge badge-muted">${escapeHtml(a.status)}</span></td>
+        <td>${formatTime(a.created_at)}</td>
+      </tr>`).join('') + '</tbody></table></div>'
+    : '<div class="muted">暂无申请记录</div>';
+}
+
+async function submitApplication(type, msgId) {
+  const reason = await promptDialog('请填写申请理由（可选）：', '', type === 'volunteer' ? '申请志愿者' : '申请管理员');
+  const res = await postJson('/points/applications', { type, reason: reason || '' });
+  if (res.code === 0) {
+    showToast('申请已提交，等待管理员审核', 'success');
+    loadApplications();
+  } else {
+    showToast(res.message, 'error');
+  }
+}
+
+document.getElementById('apply-volunteer').addEventListener('click', () => submitApplication('volunteer', 'volunteer-msg'));
+document.getElementById('apply-admin').addEventListener('click', () => submitApplication('admin', 'admin-msg'));
+
+async function loadTab(page = 1) {
+  const el = document.getElementById('tab-content');
+  if (currentTab === 'logs') {
+    const res = await getJson('/points/logs?page=' + page + '&limit=20');
+    if (res.code !== 0) { el.textContent = res.message; return; }
+    el.innerHTML = '<div class="table-scroll"><table><thead><tr><th>时间</th><th>变动</th><th>原因</th></tr></thead><tbody>' +
+      res.data.items.map(l => `<tr><td>${formatTime(l.created_at)}</td><td class="${l.delta > 0 ? 'text-success' : 'text-danger'}">${l.delta > 0 ? '+' : ''}${l.delta}</td><td>${escapeHtml(l.reason)}</td></tr>`).join('') +
+      '</tbody></table></div>';
+    renderPagination('tab-paging', res.data.page, res.data.limit, res.data.total, loadTab);
+  } else if (currentTab === 'tasks') {
+    const res = await getJson('/tasks/my?page=' + page + '&limit=20');
+    if (res.code !== 0) { el.textContent = res.message; return; }
+    const items = res.data.items || [];
+    el.innerHTML = items.length
+      ? '<div class="list-stack">' + items.map(t =>
+          `<div class="list-item"><a href="/tasks.html?id=${t.id}" class="list-title">${escapeHtml(t.platform_name)} · ${escapeHtml(t.issue_type)}</a><span class="badge badge-muted">${escapeHtml(t.status)}</span></div>`
+        ).join('') + '</div>'
+      : '<div class="muted">暂无任务</div>';
+    renderPagination('tab-paging', res.data.page, res.data.limit, res.data.total, loadTab);
+  } else if (currentTab === 'posts') {
+    const user = getUser();
+    const res = await getJson('/forum/posts?limit=200');
+    if (res.code !== 0) { el.textContent = res.message; return; }
+    const posts = res.data.items.filter(p => p.user.id === user.id);
+    el.innerHTML = posts.length
+      ? '<div class="list-stack">' + posts.map(p =>
+          `<div class="list-item"><a href="/post.html?id=${p.id}" class="list-title">${p.is_essence ? '<span class="badge">精</span> ' : ''}${escapeHtml(p.title)}</a><span class="badge badge-muted">${formatTime(p.created_at)}</span></div>`
+        ).join('') + '</div>'
+      : '<div class="muted">暂无帖子</div>';
+    document.getElementById('tab-paging').innerHTML = '';
+  }
+}
+
+document.getElementById('sign-in').addEventListener('click', async () => {
+  const res = await postJson('/points/sign-in', {});
+  if (res.code === 0) {
+    showToast(`签到成功，+${res.data.delta} 积分，连续 ${res.data.streak} 天`, 'success');
+    loadPoints();
+  } else {
+    showToast(res.message, 'error');
+  }
+});
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    currentTab = t.dataset.tab;
+    loadTab();
+  });
+});
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
